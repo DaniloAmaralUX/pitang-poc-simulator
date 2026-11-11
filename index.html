@@ -2,11 +2,1459 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="refresh" content="0; url=dist/poc-simulator.html">
-<title>Pitang Labs · Redirecionando para o Simulador de POC...</title>
-<script>window.location.replace("dist/poc-simulator.html");</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bike Experience · Pitang Labs Prototype Viewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   VIEWER CHROME: restrained, editorial. Never competes with the phone.
+   Visual Identity: Pitang Labs Design Engineering
+   ========================================================================== */
+:root {
+  --bg: #ecebe7;
+  --panel: transparent;
+  --ink: #17181a;
+  --ink-2: #4b4d50;
+  --ink-3: #6a6c6f;
+  --line: rgba(23,24,26,.10);
+  --line-2: rgba(23,24,26,.16);
+  --tint: rgba(23,24,26,.05);
+  --tint-2: rgba(23,24,26,.09);
+  --pop: #ffffff;
+  --pop-sh: 0 1px 2px rgba(0,0,0,.06), 0 12px 32px -8px rgba(0,0,0,.22);
+  --accent: #ED1C24;
+  --accent-hover: #D7141C;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --f-ui: "Inter", system-ui, -apple-system, sans-serif;
+  --f-display: "Inter", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101112; --ink: #ededeb; --ink-2: #b9bbbc; --ink-3: #8e9192;
+    --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.15);
+    --tint: rgba(255,255,255,.05); --tint-2: rgba(255,255,255,.09);
+    --pop: #1d1e20; --pop-sh: 0 0 0 1px rgba(255,255,255,.07), 0 16px 40px -8px rgba(0,0,0,.7);
+    --accent: #FF4A40; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101112; --ink: #ededeb; --ink-2: #b9bbbc; --ink-3: #8e9192;
+  --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.15);
+  --tint: rgba(255,255,255,.05); --tint-2: rgba(255,255,255,.09);
+  --pop: #1d1e20; --pop-sh: 0 0 0 1px rgba(255,255,255,.07), 0 16px 40px -8px rgba(0,0,0,.7);
+  --accent: #FF4A40; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+html { -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+body { background: var(--bg); color: var(--ink); font: 400 13.5px/1.45 var(--f-ui); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+.app {
+  height: 100dvh; min-height: 640px;
+  display: grid; grid-template-columns: 300px 1fr 300px; gap: 0;
+}
+
+/* ---------- Left rail ---------- */
+.rail { display: flex; flex-direction: column; min-height: 0; padding: 28px 20px 24px 28px; border-right: 1px solid var(--line); }
+.brand { display: flex; flex-direction: column; gap: 6px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+.brand-eyebrow { font: 600 11px/1 var(--f-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.brand-title { font: 700 24px/1.1 var(--f-display); letter-spacing: -0.02em; margin: 4px 0 0; }
+.brand-sub { color: var(--ink-3); font-size: 12.5px; line-height: 1.4; }
+
+.flows { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; min-height: 0; flex: 1; scrollbar-width: none; }
+.flow-btn {
+  width: 100%; text-align: left; display: grid; grid-template-columns: 26px 1fr; gap: 2px 8px; align-items: baseline;
+  padding: 10px 10px 11px; border-radius: 10px; color: var(--ink-2);
+  transition: background-color 150ms ease, color 150ms ease, transform 140ms var(--ease-out);
+}
+.flow-btn:active { transform: scale(0.985); }
+.flow-num { font: 600 11px/1 var(--f-ui); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.flow-title { font: 600 14px/1.2 var(--f-ui); color: var(--ink); }
+.flow-sum { grid-column: 2; font-size: 12px; line-height: 1.35; color: var(--ink-3); }
+.flow-btn[aria-current="true"] { background: var(--tint-2); }
+.flow-btn[aria-current="true"] .flow-num { color: var(--accent); }
+@media (hover: hover) and (pointer: fine) { .flow-btn:hover:not([aria-current="true"]) { background: var(--tint); } }
+
+.controls { display: flex; flex-direction: column; gap: 10px; padding-top: 16px; border-top: 1px solid var(--line); }
+.ctl { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ctl-label { font-size: 12px; color: var(--ink-3); }
+.seg { position: relative; display: inline-flex; padding: 2px; border-radius: 9px; background: var(--tint-2); }
+.seg button { position: relative; z-index: 1; height: 26px; padding: 0 10px; border-radius: 7px; font: 550 12px/1 var(--f-ui); color: var(--ink-3); transition: color 150ms ease; }
+.seg button[aria-pressed="true"] { color: var(--ink); }
+.seg-thumb { position: absolute; z-index: 0; top: 2px; left: 0; height: 26px; border-radius: 7px; background: var(--pop); box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 0 0 .5px var(--line-2); }
+.seg[data-ready] .seg-thumb { transition: transform 220ms var(--ease-out), width 220ms var(--ease-out); }
+.keys { margin-top: 6px; font-size: 11.5px; color: var(--ink-3); line-height: 1.6; }
+kbd { font: 600 10.5px/1 var(--f-ui); padding: 2px 5px; border-radius: 4px; background: var(--tint-2); color: var(--ink-2); }
+
+/* ---------- Stage ---------- */
+.stage { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; padding: 22px 16px 0; }
+.stage-h { text-align: center; min-height: 52px; }
+.stage-flow { font: 600 11px/1 var(--f-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.stage-ver { font: 700 26px/1.05 var(--f-display); margin-top: 6px; }
+.device-wrap { position: relative; flex: none; margin-top: 10px; }
+.device {
+  position: absolute; top: 0; left: 0; width: 414px; height: 868px;
+  padding: 12px; border-radius: 66px; background: #0b0b0c;
+  box-shadow: 0 0 0 1.5px #3a3b3d, 0 0 0 3px #0b0b0c, 0 40px 80px -24px rgba(0,0,0,.45), 0 12px 24px -12px rgba(0,0,0,.3);
+  transform-origin: top left;
+}
+.device .ph { border-radius: 54px; clip-path: inset(0 round 54px); }
+.island { position: absolute; z-index: 100; top: 23px; left: 50%; width: 122px; height: 35px; margin-left: -61px; border-radius: 20px; background: #000; pointer-events: none; }
+
+/* ---------- Notes ---------- */
+.notes { min-height: 0; overflow-y: auto; padding: 28px 28px 120px 20px; border-left: 1px solid var(--line); scrollbar-width: thin; }
+.n-block { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.n-block:first-child { padding-top: 0; }
+.n-h { font: 600 11px/1 var(--f-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 10px; }
+.n-axis { font: 500 14.5px/1.45 var(--f-ui); color: var(--ink); margin: 0; text-wrap: pretty; }
+.n-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.n-list li { position: relative; padding-left: 16px; color: var(--ink-2); text-wrap: pretty; }
+.n-list li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 6px; height: 1.5px; background: var(--ink-3); }
+.n-try li::before { width: 6px; height: 6px; top: .5em; border-radius: 50%; background: var(--accent); }
+.n-motion { color: var(--ink-2); margin: 0; }
+
+.personas { display: flex; flex-wrap: wrap; gap: 6px; }
+.persona { position: relative; display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px 0 4px; border-radius: 999px; background: var(--tint); font: 550 12.5px/1 var(--f-ui); transition: background-color 150ms ease, transform 140ms var(--ease-out); }
+.persona:active { transform: scale(0.97); }
+.persona i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 10px/1 var(--f-ui); font-style: normal; color: #fff; }
+.persona[aria-expanded="true"] { background: var(--tint-2); }
+@media (hover: hover) and (pointer: fine) { .persona:hover { background: var(--tint-2); } }
+.pop {
+  position: fixed; z-index: 50; width: 260px; padding: 14px 16px; border-radius: 14px; background: var(--pop); box-shadow: var(--pop-sh);
+  font-size: 12.5px; color: var(--ink-2);
+  transform-origin: var(--origin, top left);
+  opacity: 0; transform: scale(0.96); pointer-events: none;
+  transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+.pop[data-open] { opacity: 1; transform: scale(1); pointer-events: auto; }
+.pop b { display: block; color: var(--ink); font-size: 13.5px; margin-bottom: 2px; }
+.pop q { display: block; margin: 8px 0; font: 600 16px/1.15 var(--f-display); color: var(--ink); quotes: "\201C" "\201D"; }
+.pop .src { margin-top: 8px; font-size: 11px; color: var(--ink-3); }
+
+.today { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+.today-btn { display: flex; flex-direction: column; gap: 6px; text-align: left; transition: transform 140ms var(--ease-out); }
+.today-btn:active { transform: scale(0.97); }
+.today-btn img { width: 100%; aspect-ratio: 3/4; object-fit: cover; object-position: top; border-radius: 8px; box-shadow: 0 0 0 1px var(--line-2); background: var(--tint); }
+.today-btn span { font-size: 11px; line-height: 1.3; color: var(--ink-3); }
+.today-note { margin: 10px 0 0; font-size: 11.5px; color: var(--ink-3); }
+
+/* ---------- Lightbox (modal: centred origin) ---------- */
+.lb { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 40px; background: rgba(10,10,10,.62); opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease-out); }
+.lb[data-open] { opacity: 1; pointer-events: auto; }
+.lb-inner { position: relative; max-width: min(1100px, 92vw); max-height: 88vh; overflow: auto; border-radius: 14px; background: var(--pop); box-shadow: var(--pop-sh); transform: scale(0.96); transition: transform 200ms var(--ease-out); }
+.lb[data-open] .lb-inner { transform: scale(1); }
+.lb img { display: block; max-width: 100%; height: auto; }
+.lb-cap { position: sticky; bottom: 0; padding: 10px 14px; font-size: 12.5px; color: var(--ink-2); background: var(--pop); border-top: 1px solid var(--line); }
+.lb-close { position: absolute; top: 18px; right: 18px; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(255,255,255,.12); }
+.lb-close svg { width: 20px; height: 20px; }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Short laptop screens: tighten the rail ---------- */
+@media (max-height: 860px) and (min-width: 761px) {
+  .rail { padding-top: 22px; }
+  .brand { padding-bottom: 16px; }
+  .brand-title { font-size: 24px; }
+  .flow-btn { padding: 8px 10px; }
+  .flow-sum { display: none; }
+  .keys { display: none; }
+}
+
+/* ---------- Narrow screens: stack ---------- */
+@media (max-width: 1100px) {
+  .app { grid-template-columns: 260px 1fr; }
+  .notes { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); padding: 24px 28px 120px; }
+  .app { height: auto; }
+  .rail { position: sticky; top: 0; height: 100dvh; }
+}
+@media (max-width: 760px) {
+  .app { display: block; }
+  .rail { position: static; height: auto; padding: 20px 16px 12px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .flows { flex-direction: row; overflow-x: auto; margin-top: 12px; gap: 6px; }
+  .flow-btn { width: auto; white-space: nowrap; grid-template-columns: auto auto; padding: 9px 12px; }
+  .flow-sum { display: none; }
+  .controls { flex-direction: row; flex-wrap: wrap; gap: 10px 16px; }
+  .keys { display: none; }
+  .stage { padding: 18px 16px 0; }
+  .notes { padding: 20px 16px 120px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .seg[data-ready] .seg-thumb, .pop, .lb, .lb-inner { transition-duration: 1ms; }
+}
+
+/* Picker: never wrap, scroll sideways on narrow screens */
+.proto-picker { white-space: nowrap; max-width: calc(100vw - 24px); overflow-x: auto; scrollbar-width: none; }
+.proto-picker::-webkit-scrollbar { display: none; }
+.proto-picker-item { flex: none; }
+
+/* Picker lives in the stage, so it centres on the phone, not the viewport */
+.stage > .proto-picker { position: absolute; bottom: 20px; }
+@media (max-width: 760px) {
+  .stage > .proto-picker { position: sticky; bottom: 12px; left: auto; transform: none; align-self: center; margin: 14px 0; }
+}
+
+/* ---------- Tour Button ---------- */
+.tour-again { all: unset; box-sizing: border-box; cursor: pointer; align-self: flex-start; font: 600 12.5px/1 var(--f-ui); color: var(--ink-2); padding: 9px 14px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line-2); transition: background-color 150ms var(--ease-out), color 150ms ease; }
+@media (hover: hover) and (pointer: fine) { .tour-again:hover { background: var(--tint); color: var(--accent); } }
+.tour-again:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tour { position: fixed; inset: 0; z-index: 2147483647; visibility: hidden; pointer-events: none; }
+.tour[data-open] { visibility: visible; pointer-events: auto; }
+.tour-hole { position: absolute; left: 0; top: 0; width: 0; height: 0; border-radius: 16px; box-shadow: 0 0 0 200vmax rgba(8,9,10,.55), 0 0 0 2px rgba(255,255,255,.9); opacity: 0; pointer-events: none;
+  transition: transform 320ms var(--ease-out), width 320ms var(--ease-out), height 320ms var(--ease-out), opacity 200ms var(--ease-out); }
+.tour[data-open] .tour-hole { opacity: 1; }
+.tour-hole[data-off] { width: 0 !important; height: 0 !important; box-shadow: 0 0 0 200vmax rgba(8,9,10,.55); }
+.tour-card { position: absolute; left: 0; top: 0; width: 320px; max-width: calc(100vw - 24px); box-sizing: border-box; padding: 18px 18px 14px; border-radius: 16px; background: var(--pop); color: var(--ink); box-shadow: var(--pop-sh); }
+.tour-card > * { transition: opacity 200ms var(--ease-out); }
+.tour-card:not([data-in]) > .tour-t, .tour-card:not([data-in]) > .tour-b { opacity: 0; }
+.tour[data-open] .tour-card { transition: transform 320ms var(--ease-out); }
+.tour-card::before { content: ""; position: absolute; width: 12px; height: 12px; background: var(--pop); transform: rotate(45deg); }
+.tour-card[data-side="right"]::before { left: -6px; top: 24px; }
+.tour-card[data-side="left"]::before { right: -6px; top: 24px; }
+.tour-card[data-side="top"]::before { left: calc(50% - 6px); bottom: -6px; }
+.tour-card[data-side="none"]::before { display: none; }
+.tour-k { margin: 0; font: 650 11px/1 var(--f-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.tour-t { margin: 8px 0 0; font: 700 20px/1.15 var(--f-ui); letter-spacing: -.01em; }
+.tour-b { margin: 8px 0 0; font: 400 14px/1.5 var(--f-ui); color: var(--ink-2); }
+.tour-b kbd { font-size: 11px; }
+.tour-f { display: flex; align-items: center; gap: 6px; margin-top: 16px; }
+.tour-dots { display: flex; gap: 5px; margin-right: auto; }
+.tour-dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--line-2); transition: width 200ms var(--ease-out), background-color 200ms; }
+.tour-dots i[data-on] { width: 16px; background: var(--accent); }
+.tour-f button { all: unset; box-sizing: border-box; cursor: pointer; min-height: 36px; padding: 0 12px; border-radius: 999px; font: 600 13px/36px var(--f-ui); color: var(--ink-2); transition: transform 120ms var(--ease-out), background-color 150ms; }
+.tour-f button[hidden] { display: none; }
+.tour-f .tour-next { background: var(--accent); color: #ffffff; padding: 0 16px; }
+.tour-f button:active { transform: scale(.97); }
+@media (hover: hover) and (pointer: fine) { .tour-f .tour-skip:hover, .tour-f .tour-back:hover { background: var(--tint-2); } }
+.tour-f button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .tour-hole, .tour[data-open] .tour-card, .tour-card > *, .tour-dots i { transition: none; } }
+
+/* Today placeholders */
+.today-ph { display: grid; place-items: center; aspect-ratio: 9 / 13; border-radius: 10px; border: 1.5px dashed var(--line-2); padding: 10px; text-align: center; }
+.today-ph span { font: 500 11.5px/1.35 var(--f-ui); color: var(--ink-3); }
+
+/* ---------- Device frames: iOS (default), Android, Web ---------- */
+.device[data-device="android"] { width: 436px; height: 939px; border-radius: 44px; }
+.device[data-device="android"] .ph { width: 412px; height: 915px; border-radius: 32px; clip-path: inset(0 round 32px); }
+.device[data-device="android"] .island { top: 24px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; }
+.device[data-device="web"] { width: 1280px; height: 820px; padding: 40px 0 0; border-radius: 12px; background: #dcdcd8;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.12), 0 40px 80px -24px rgba(0,0,0,.4), 0 12px 24px -12px rgba(0,0,0,.25); }
+.device[data-device="web"]::before { content: ""; position: absolute; top: 15px; left: 18px; width: 11px; height: 11px; border-radius: 50%; background: #ef6a5e; box-shadow: 18px 0 0 #f4be4f, 36px 0 0 #61c454; }
+.device[data-device="web"] .island { top: 8px; width: 440px; height: 24px; margin-left: -220px; border-radius: 7px; background: #f6f6f4; }
+.device[data-device="web"] .ph { width: 1280px; height: 780px; border-radius: 0 0 12px 12px; clip-path: inset(0 round 0 0 12px 12px); }
+
+/* Emil Kowalski: prototype skill PICKER.md, verbatim. Harness chrome, not design. */
+.proto-picker {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.82);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 8px 24px rgba(0, 0, 0, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.proto-picker-highlight {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  will-change: transform;
+}
+
+.proto-picker[data-ready] .proto-picker-highlight {
+  transition:
+    transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+    width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proto-picker[data-ready] .proto-picker-highlight { transition: none; }
+}
+
+.proto-picker-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  cursor: pointer;
+  transition: color 150ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .proto-picker-item:hover {
+    color: rgba(255, 255, 255, 0.85);
+  }
+}
+
+.proto-picker-item:active {
+  transform: scale(0.97);
+}
+
+.proto-picker-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+
+.proto-picker-item[data-active] {
+  color: #fff;
+}
+
+.proto-picker-divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.proto-picker-replay {
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.proto-picker[data-position="top"] {
+  bottom: auto;
+  top: 24px;
+}
+
+/* ==========================================================================
+   SKELETON KIT: wireframe primitives for the phone. No brand, no content.
+   Every colour is a token on .ph so the phone's Light/Dark switch works.
+   ========================================================================== */
+.ph {
+  --sk-bg: #f4f4f2; --sk-surface: #ffffff; --sk-block: #e3e3df; --sk-block-2: #d3d3ce;
+  --sk-line: rgba(20,22,24,.10); --sk-ink: #17191b; --sk-ink-2: #55585b; --sk-ink-3: #7c7f82;
+  --sk-accent: #ED1C24; --sk-on-accent: #ffffff; --sk-note: #ED1C24;
+  --sk-sh: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px -10px rgba(0,0,0,.16);
+  --ease-out: cubic-bezier(.23,1,.32,1); --ease-drawer: cubic-bezier(.32,.72,0,1);
+  --fs: 1;
+  position: relative; width: 390px; height: 844px; overflow: hidden;
+  background: var(--sk-bg); color: var(--sk-ink);
+  font: 400 calc(var(--fs) * 14px)/1.4 var(--f-ui); -webkit-font-smoothing: antialiased;
+}
+.ph[data-theme="dark"] {
+  --sk-bg: #111213; --sk-surface: #1b1c1e; --sk-block: #2a2c2e; --sk-block-2: #36383b;
+  --sk-line: rgba(255,255,255,.09); --sk-ink: #ececea; --sk-ink-2: #b4b6b8; --sk-ink-3: #8b8e91;
+  --sk-accent: #FF4A40; --sk-on-accent: #0C0E12; --sk-note: #FF4A40;
+  --sk-sh: 0 0 0 1px rgba(255,255,255,.06);
+}
+.ph *, .ph *::before, .ph *::after { box-sizing: border-box; }
+:where(.ph) :where(button) { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ph :focus-visible { outline: 2px solid var(--sk-accent); outline-offset: 2px; border-radius: 6px; }
+.ph [hidden] { display: none !important; }
+
+/* frame */
+.sk-status { position: absolute; z-index: 30; top: 0; left: 0; right: 0; height: 47px; display: flex; align-items: center; justify-content: space-between; padding: 6px 30px 0 34px; font: 600 15px/1 var(--f-ui); color: var(--sk-ink); }
+.sk-status i { display: inline-block; width: 18px; height: 10px; border-radius: 3px; background: currentColor; opacity: .85; margin-left: 5px; }
+.sk-bar { position: absolute; z-index: 20; top: 0; left: 0; right: 0; padding: 47px 16px 0; height: 103px; display: flex; align-items: center; gap: 10px; background: var(--sk-bg); box-shadow: inset 0 -1px 0 var(--sk-line); }
+.sk-bar[data-clear] { background: transparent; box-shadow: none; }
+.sk-logo { height: 26px; width: 74px; border-radius: 6px; border: 1.5px dashed var(--sk-ink-3); display: grid; place-items: center; font: 650 calc(var(--fs) * 10px)/1 var(--f-ui); letter-spacing: .14em; color: var(--sk-ink-3); }
+.sk-bar .sk-sp { flex: 1; }
+.sk-ic { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--sk-ink-2); }
+.sk-ic svg { width: 22px; height: 22px; }
+.sk-title-bar { font: 650 calc(var(--fs) * 16px)/1 var(--f-ui); }
+.sk-scroll { position: absolute; inset: 103px 0 0; overflow-y: auto; overflow-x: hidden; padding-bottom: 120px; scrollbar-width: none; overscroll-behavior: contain; }
+.sk-scroll::-webkit-scrollbar { display: none; }
+.sk-scroll[data-full] { top: 0; }
+.sk-pad { padding: 0 16px; }
+.sk-sec { padding: 22px 16px 6px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.sk-stack { display: flex; flex-direction: column; gap: 12px; }
+.sk-row { display: flex; gap: 12px; align-items: center; }
+
+/* tab bar */
+.sk-tabs { position: absolute; z-index: 25; left: 12px; right: 12px; bottom: 24px; height: 64px; border-radius: 22px; background: var(--sk-surface); box-shadow: var(--sk-sh), 0 0 0 1px var(--sk-line); display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px; }
+.sk-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border-radius: 16px; color: var(--sk-ink-3); font: 600 calc(var(--fs) * 10.5px)/1 var(--f-ui); transition: background-color 150ms var(--ease-out); }
+.sk-tab i { width: 20px; height: 20px; border-radius: 6px; background: currentColor; opacity: .55; }
+.sk-tab[aria-current="page"] { color: var(--sk-ink); background: var(--sk-block); }
+.sk-tab[aria-current="page"] i { opacity: 1; }
+.sk-home { position: absolute; z-index: 26; bottom: 8px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: var(--sk-ink); opacity: .9; }
+
+/* blocks */
+.sk-media { position: relative; border-radius: 14px; overflow: hidden; background: var(--sk-block);
+  background-image: repeating-linear-gradient(135deg, transparent 0 11px, var(--sk-block-2) 11px 12px); }
+.sk-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 55%, rgba(0,0,0,.06)); }
+.sk-media[data-bleed] { border-radius: 0; }
+.sk-scroll[data-full] > .sk-media:first-child .sk-tag { top: 112px; }
+.sk-media .sk-glyph { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: var(--sk-surface); display: grid; place-items: center; color: var(--sk-ink-2); box-shadow: var(--sk-sh); }
+.sk-media .sk-glyph svg { width: 20px; height: 20px; }
+.sk-l { height: calc(var(--fs) * 10px); border-radius: 5px; background: var(--sk-block); }
+.sk-l[data-t] { height: calc(var(--fs) * 18px); border-radius: 6px; background: var(--sk-block-2); }
+.sk-l[data-xl] { height: calc(var(--fs) * 28px); border-radius: 8px; background: var(--sk-block-2); }
+.sk-lines { display: flex; flex-direction: column; gap: 8px; }
+.sk-card { background: var(--sk-surface); border-radius: 16px; box-shadow: var(--sk-sh); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.sk-av { width: 32px; height: 32px; border-radius: 50%; background: var(--sk-block-2); flex: none; }
+.sk-chip { height: 34px; padding: 0 14px; border-radius: 999px; background: var(--sk-surface); box-shadow: inset 0 0 0 1px var(--sk-line); display: inline-flex; align-items: center; gap: 6px; font: 600 calc(var(--fs) * 12.5px)/1 var(--f-ui); color: var(--sk-ink-2); white-space: nowrap; transition: background-color 150ms var(--ease-out), color 150ms; }
+.sk-chip[aria-pressed="true"] { background: var(--sk-ink); color: var(--sk-bg); box-shadow: none; }
+.sk-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 0 16px; }
+.sk-chips::-webkit-scrollbar { display: none; }
+.sk-btn { height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font: 650 calc(var(--fs) * 15px)/1 var(--f-ui); background: var(--sk-accent); color: var(--sk-on-accent); width: 100%; transition: transform 140ms var(--ease-out), opacity 150ms; }
+.sk-btn[data-ghost] { background: transparent; color: var(--sk-ink); box-shadow: inset 0 0 0 1.5px var(--sk-line); }
+.sk-btn:active, .sk-press:active { transform: scale(.97); }
+.sk-press { transition: transform 140ms var(--ease-out); }
+.sk-dock { position: absolute; z-index: 24; left: 0; right: 0; bottom: 0; padding: 12px 16px 34px; background: var(--sk-surface); box-shadow: 0 -1px 0 var(--sk-line); display: flex; gap: 10px; align-items: center; }
+.sk-num { font: 700 calc(var(--fs) * 26px)/1 var(--f-ui); color: var(--sk-ink-3); letter-spacing: -.02em; }
+.sk-dots { display: flex; gap: 6px; justify-content: center; }
+.sk-dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--sk-block-2); transition: width 200ms var(--ease-out), background-color 200ms; }
+.sk-dots i[data-on] { width: 18px; background: var(--sk-ink); }
+.sk-rail { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 16px; scrollbar-width: none; }
+.sk-rail::-webkit-scrollbar { display: none; }
+.sk-rail > * { scroll-snap-align: start; flex: none; }
+.sk-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--sk-block); border-radius: 12px; padding: 3px; }
+.sk-seg button { height: 38px; border-radius: 9px; font: 600 calc(var(--fs) * 13px)/1 var(--f-ui); color: var(--sk-ink-2); transition: background-color 180ms var(--ease-out), color 180ms; }
+.sk-seg button[aria-pressed="true"] { background: var(--sk-surface); color: var(--sk-ink); box-shadow: var(--sk-sh); }
+.sk-opt { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; background: var(--sk-surface); box-shadow: inset 0 0 0 1.5px var(--sk-line); min-height: 56px; width: 100%; text-align: left; transition: box-shadow 160ms var(--ease-out); }
+.sk-opt[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--sk-accent); }
+.sk-radio { width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--sk-block-2); flex: none; display: grid; place-items: center; }
+.sk-opt[aria-pressed="true"] .sk-radio { box-shadow: inset 0 0 0 2px var(--sk-accent); }
+.sk-opt[aria-pressed="true"] .sk-radio::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--sk-accent); animation: sk-pop 180ms var(--ease-out); }
+@keyframes sk-pop { from { transform: scale(.6); opacity: 0; } }
+.sk-tl { position: relative; padding-left: 22px; display: flex; flex-direction: column; gap: 14px; }
+.sk-tl::before { content: ""; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: var(--sk-line); }
+.sk-tl > * { position: relative; }
+.sk-tl > *::before { content: ""; position: absolute; left: -21px; top: 14px; width: 12px; height: 12px; border-radius: 50%; background: var(--sk-surface); box-shadow: inset 0 0 0 2px var(--sk-block-2); }
+.sk-tl > [data-on]::before { box-shadow: inset 0 0 0 4px var(--sk-accent); }
+.sk-progress { display: flex; gap: 4px; }
+.sk-progress i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.35); overflow: hidden; }
+.sk-progress i[data-done] { background: #fff; }
+
+/* annotation tags: the wireframe names each block */
+.sk-tag { position: absolute; z-index: 5; top: 8px; left: 8px; display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px; border-radius: 6px; background: var(--sk-surface); color: var(--sk-note); font: 650 calc(var(--fs) * 10px)/1 var(--f-ui); letter-spacing: .04em; text-transform: uppercase; box-shadow: 0 0 0 1px color-mix(in srgb, var(--sk-note) 40%, transparent); white-space: nowrap; }
+.sk-tag-inline { position: static; align-self: flex-start; }
+.ph[data-annot="off"] .sk-tag { display: none; }
+
+/* sheet + toast */
+.sk-scrim { position: absolute; inset: 0; z-index: 60; background: rgba(0,0,0,.35); opacity: 0; transition: opacity 240ms var(--ease-out); }
+.sk-scrim[data-open] { opacity: 1; }
+.sk-sheet { position: absolute; z-index: 61; left: 0; right: 0; bottom: 0; padding: 10px 16px 36px; border-radius: 24px 24px 0 0; background: var(--sk-surface); transform: translateY(100%); transition: transform 420ms var(--ease-drawer); display: flex; flex-direction: column; gap: 14px; }
+.sk-sheet[data-open] { transform: translateY(0); }
+.sk-sheet .sk-grab { width: 40px; height: 5px; border-radius: 3px; background: var(--sk-block-2); align-self: center; }
+.sk-toast { position: absolute; z-index: 70; left: 16px; right: 16px; bottom: 100px; padding: 14px 16px; border-radius: 14px; background: var(--sk-ink); color: var(--sk-bg); font: 600 calc(var(--fs) * 13.5px)/1.3 var(--f-ui); opacity: 0; transform: translateY(8px); transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); pointer-events: none; }
+.sk-toast[data-on] { opacity: 1; transform: none; }
+
+/* screen entrance: quiet, once per mount */
+.sk-in { animation: sk-in 260ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 40ms); }
+@keyframes sk-in { from { opacity: 0; transform: translateY(6px); } }
+.ph[data-reduced-motion] .sk-in { animation: none; }
+.ph[data-reduced-motion] * { transition-duration: 1ms !important; }
+@media (hover: hover) and (pointer: fine) {
+  .sk-chip:not([aria-pressed="true"]):hover, .sk-opt:hover { background: color-mix(in srgb, var(--sk-surface) 94%, var(--sk-ink)); }
+}
+
+/* ==========================================================================
+   PLATFORMS: the same screens, adapted to each platform's conventions.
+   iOS is the base above. Android follows Material 3. Web is a responsive
+   desktop layout with top navigation.
+   ========================================================================== */
+/* Android: compact status bar, 56px top app bar, full-width navigation bar with pill indicator, gesture handle */
+.ph[data-device="android"] { width: 412px; height: 915px; }
+.ph[data-device="android"] .sk-status { height: 36px; padding: 2px 22px 0 26px; font-size: 13px; }
+.ph[data-device="android"] .sk-status i { width: 14px; height: 9px; }
+.ph[data-device="android"] .sk-bar { padding-top: 36px; height: 92px; }
+.ph[data-device="android"] .sk-scroll { top: 92px; }
+.ph[data-device="android"] .sk-scroll[data-full] { top: 0; }
+.ph[data-device="android"] .sk-tabs { left: 0; right: 0; bottom: 0; height: 96px; padding: 10px 6px 26px; border-radius: 0; box-shadow: 0 -1px 0 var(--sk-line); }
+.ph[data-device="android"] .sk-tab { gap: 8px; border-radius: 0; font-size: calc(var(--fs) * 11.5px); }
+.ph[data-device="android"] .sk-tab[aria-current="page"] { background: none; }
+.ph[data-device="android"] .sk-tab[aria-current="page"] i { box-shadow: 0 0 0 6px var(--sk-block), -14px 0 0 6px var(--sk-block), 14px 0 0 6px var(--sk-block); background: var(--sk-ink); }
+.ph[data-device="android"] .sk-home { width: 108px; height: 4px; margin-left: -54px; bottom: 8px; }
+.ph[data-device="android"] .sk-btn { border-radius: 999px; height: 48px; }
+.ph[data-device="android"] .sk-card { border-radius: 12px; }
+.ph[data-device="android"] .sk-sheet { border-radius: 28px 28px 0 0; }
+
+/* Web: no status bar, 64px site header, top navigation in place of the tab bar, a centred content column */
+.ph[data-device="web"] { width: 1280px; height: 780px; }
+.ph[data-device="web"] .sk-status, .ph[data-device="web"] .sk-home { display: none; }
+.ph[data-device="web"] .sk-bar { padding: 0 32px; height: 64px; }
+.ph[data-device="web"] .sk-bar[data-clear] { background: var(--sk-bg); box-shadow: inset 0 -1px 0 var(--sk-line); }
+.ph[data-device="web"] .sk-scroll, .ph[data-device="web"] .sk-scroll[data-full] { top: 64px; padding-bottom: 48px; }
+.ph[data-device="web"] .sk-scroll > * { max-width: 760px; margin-left: auto; margin-right: auto; }
+.ph[data-device="web"] .sk-scroll > .sk-media[data-bleed] { max-width: none; aspect-ratio: 21 / 8 !important; }
+.ph[data-device="web"] .sk-tabs { top: 0; bottom: auto; left: 50%; right: auto; transform: translateX(-50%); width: 520px; height: 64px; padding: 0; border-radius: 0; background: none; box-shadow: none; z-index: 21; display: flex; }
+.ph[data-device="web"] .sk-tab { flex: 1; flex-direction: row; border-radius: 0; font-size: calc(var(--fs) * 14px); box-shadow: inset 0 -2px 0 transparent; }
+.ph[data-device="web"] .sk-tab i { display: none; }
+.ph[data-device="web"] .sk-tab[aria-current="page"] { background: none; box-shadow: inset 0 -2px 0 var(--sk-ink); }
+.ph[data-device="web"] .sk-dock { left: 50%; right: auto; width: 760px; margin-left: -380px; bottom: 24px; padding: 12px 16px; border-radius: 16px; box-shadow: var(--sk-sh), 0 0 0 1px var(--sk-line); }
+.ph[data-device="web"] .sk-sheet { left: calc(50% - 260px); right: auto; width: 520px; bottom: 24px; border-radius: 24px; padding-bottom: 20px; }
+.ph[data-device="web"] .sk-toast { left: 50%; right: auto; width: 420px; margin-left: -210px; bottom: 40px; }
+@media (hover: hover) and (pointer: fine) { .ph[data-device="web"] .sk-tab:not([aria-current="page"]):hover { color: var(--sk-ink); } }
+
+
+</style>
 </head>
-<body style="font-family:sans-serif;display:grid;place-items:center;height:100vh;margin:0;background:#0c0e12;color:#f2f4f8">
-  <p>Redirecionando para o <a href="dist/poc-simulator.html" style="color:#ed1c24;font-weight:bold">Simulador de POC do Pitang Labs</a>...</p>
+<body>
+<div class="app">
+  <aside class="rail" aria-label="Fluxos">
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true" style="margin-bottom:8px">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 137 39" style="height:26px;width:auto;display:block"><g fill="#ED1C24"><path d="M124.376 23.813v-.203c-.747-.698-1.291-1.45-1.651-2.25-.386-.81-.566-1.72-.566-2.722 0-1.848.634-3.384 1.901-4.63 1.246-1.24 2.806-1.863 4.708-1.863.858 0 1.672.12 2.374.353a6.916 6.916 0 0 1 2.059 1.067c.589-.567 1.178-.98 1.789-1.255.589-.274 1.245-.402 1.946-.402v2.05h-.431c-.499 0-.926.057-1.29.17a3.297 3.297 0 0 0-1.043.51c.409.583.679 1.198.882 1.83a7.17 7.17 0 0 1 .292 1.994c0 1.997-.611 3.616-1.789 4.855-1.2 1.236-2.715 1.848-4.617 1.848a7.47 7.47 0 0 1-1.335-.12 9.217 9.217 0 0 1-1.448-.383c-.656.169-1.178.405-1.538.683-.363.286-.544.605-.544.965 0 .83 1.516 1.33 4.55 1.488.926.048 1.673.097 2.239.135 1.992.139 3.507.608 4.572 1.408 1.043.804 1.56 1.904 1.56 3.294 0 1.697-.678 2.989-2.059 3.883-1.38.886-3.371 1.329-5.997 1.329-2.397 0-4.276-.41-5.611-1.22-1.335-.82-2.014-1.942-2.014-3.38 0-.763.203-1.442.656-2.043.432-.59 1.111-1.146 2.059-1.687v-.364c-.611-.184-1.11-.48-1.425-.875-.364-.413-.521-.893-.521-1.457 0-.53.18-1.048.544-1.525.386-.488.949-.983 1.744-1.494m-.154-5.164c0 1.348.431 2.501 1.313 3.448.904.946 1.969 1.415 3.237 1.415 1.267 0 2.396-.458 3.259-1.374.836-.916 1.268-2.08 1.268-3.489 0-1.408-.432-2.561-1.268-3.459-.859-.9-1.947-1.352-3.259-1.352-1.246 0-2.33.459-3.215 1.397-.881.94-1.335 2.077-1.335 3.414Zm2.262 11.056c-1.066.466-1.834.984-2.375 1.551-.521.57-.768 1.19-.768 1.859 0 .969.498 1.712 1.515 2.264 1.016.549 2.423.82 4.208.82 1.879 0 3.327-.301 4.366-.902 1.043-.601 1.56-1.439 1.56-2.509 0-1.07-.611-1.915-1.856-2.385-1.246-.461-3.462-.702-6.654-.702l.004.004Zm-20.389 1.386V12.543h2.194v2.914c1.088-1.074 2.149-1.885 3.215-2.426 1.087-.537 2.126-.815 3.191-.815 1.651 0 2.896.496 3.71 1.488.836.995 1.245 2.49 1.245 4.483V31.08h-2.194V18.965c0-1.84-.248-3.11-.769-3.793-.499-.691-1.403-1.03-2.671-1.03-.926 0-1.856.286-2.828.865-.948.574-1.924 1.438-2.895 2.58v13.497h-2.194l-.004-.004Zm-4.321-4.702v-5.712c-3.596.796-5.997 1.604-7.22 2.415-1.2.807-1.811 1.911-1.811 3.297 0 1.025.27 1.825.814 2.411.544.582 1.29.875 2.239.875.949 0 1.924-.26 2.873-.785.949-.526 1.991-1.36 3.102-2.501h.003Zm.387 4.702c-.113-.53-.225-.984-.27-1.363-.045-.383-.09-.736-.113-1.075-1.016.947-2.037 1.653-3.053 2.104a7.8 7.8 0 0 1-3.192.68c-1.492 0-2.693-.459-3.597-1.379-.904-.913-1.38-2.107-1.38-3.568 0-2.012.86-3.593 2.536-4.746 1.672-1.157 4.594-2.104 8.735-2.85v-1.796c0-.927-.364-1.667-1.088-2.22-.746-.551-1.718-.833-2.963-.833-.971 0-1.856.252-2.603.743-.746.485-1.403 1.229-1.969 2.235l-1.695-.988c.769-1.33 1.65-2.29 2.715-2.899 1.043-.604 2.33-.909 3.849-.909 1.743 0 3.146.462 4.275 1.375 1.11.916 1.673 2.08 1.673 3.496v11.518c0 .225.023.56.09.991.045.421.113.92.225 1.484h-2.175Zm-20.411-5.772v-10.29h-2.037V12.04h2.037V6.936h3.825v5.104h2.513v2.978h-2.513V25.51c0 1.138.113 1.886.315 2.231.203.33.59.503 1.133.503.203 0 .521-.015.949-.056.067-.004.135-.015.18-.015v2.87a5.838 5.838 0 0 1-.949.236 6.33 6.33 0 0 1-.994.079c-1.583 0-2.963-.417-3.574-1.25-.59-.827-.882-2.434-.882-4.804l-.003.004Zm-6.789 5.772V12.04h3.78v19.04h-3.78Zm0-22.056V5.445h3.78v3.58h-3.78ZM58.03 37.817V12.543h1.628l.566 2.404h.158c.881-.92 1.789-1.612 2.693-2.073a6.347 6.347 0 0 1 2.873-.692c2.082 0 3.732.86 4.977 2.595 1.245 1.728 1.857 4.071 1.857 7.012 0 2.94-.612 5.287-1.857 7.015-1.245 1.728-2.895 2.588-4.977 2.588-.994 0-1.97-.222-2.896-.677-.904-.454-1.789-1.134-2.67-2.042h-.158v9.137H58.03v.007Zm2.194-20.305v8.607c.95 1.232 1.88 2.13 2.76 2.681.882.556 1.812.83 2.784.83 1.538 0 2.738-.676 3.574-2.024.837-1.348 1.268-3.279 1.268-5.776s-.431-4.42-1.268-5.768c-.836-1.352-2.036-2.032-3.574-2.032-.994 0-1.924.278-2.806.823-.859.548-1.789 1.434-2.738 2.659Zm57.61 20.264V34.23h-1.267v-.489h3.075v.489h-1.268v3.545h-.543.003Zm-2.306 0v-4.034h.544v4.034h-.544Zm-2.693-.943h.499c-.068.316-.203.57-.432.759-.225.187-.521.281-.859.281-.408 0-.723-.139-.949-.409-.247-.274-.363-.65-.363-1.115 0-.504.112-.89.337-1.176.248-.282.567-.42.972-.42.431 0 .746.127.971.386.225.256.341.627.341 1.097v.214h-2.104c0 .308.068.556.225.721.135.17.338.255.612.255a.776.776 0 0 0 .498-.157c.136-.102.203-.252.248-.432l.004-.004Zm-1.583-.789h1.605c0-.274-.067-.484-.225-.634-.135-.154-.315-.225-.566-.225a.793.793 0 0 0-.589.221c-.112.147-.202.36-.225.638Zm-1.628 1.732v-4.034h.499v4.034h-.499Zm-1.268 0v-2.933h.499v2.933h-.499Zm0-3.47v-.56h.499v.56h-.499Zm-1.222 3.113a1.054 1.054 0 0 1-.409.342 1.128 1.128 0 0 1-.521.112 1.2 1.2 0 0 1-.949-.431c-.225-.286-.364-.669-.364-1.142 0-.473.135-.841.364-1.123.247-.285.566-.428.949-.428.202 0 .386.037.521.112.157.072.27.192.409.35v-.364h.476v2.872c0 .447-.09.778-.315.98-.225.2-.566.301-1.043.301-.386 0-.678-.071-.904-.225-.225-.154-.315-.365-.315-.635v-.019h.477v.015c0 .15.067.267.18.338.135.08.315.117.589.117.315 0 .521-.06.656-.18.135-.117.203-.312.203-.587v-.401l-.004-.004Zm-.859-2.223c-.27 0-.476.09-.634.289-.157.191-.225.47-.225.83s.068.623.225.819c.158.195.364.3.634.3.315 0 .521-.09.656-.274.158-.18.225-.455.225-.826 0-.372-.067-.661-.225-.853-.135-.191-.364-.285-.656-.285Zm-5.184 2.58 1.493-4.034h.589l1.515 4.034h-.588l-.432-1.202h-1.583l-.431 1.202h-.566.003Zm1.156-1.675h1.267l-.633-1.776-.634 1.776ZM48.301 12.156C44.794 4.773 38.774 0 32.961 0c-1.767 0-3.417.45-4.91 1.33-.157.01-.247.063-.315.09a5.59 5.59 0 0 1-2.262.454c-1.11 0-1.991-.278-2.171-.372A10.864 10.864 0 0 0 18.236.267C12.186.267 6.237 4.852 2.73 12.23c-4.685 9.885-3.192 21.2 3.345 25.233 1.56.973 3.327 1.468 5.206 1.468 2.445 0 5.022-.863 7.468-2.505.926-.627 3.416-2.091 6.424-2.091a9.02 9.02 0 0 1 3.849.86C31.963 37.629 36.693 39 39.84 39a9.6 9.6 0 0 0 5.112-1.446c3.236-1.994 5.34-5.768 5.93-10.635.588-4.75-.338-9.997-2.581-14.763ZM17.639 34.794c-2.104 1.42-4.298 2.174-6.357 2.174a7.817 7.817 0 0 1-4.186-1.179c-5.7-3.523-6.856-13.71-2.58-22.716C7.64 6.493 13.026 2.23 18.228 2.23c1.47 0 2.873.341 4.163 1.014.27.139.792.326 1.493.447v.07c-.247.129-7.921.992-10.138 10.392-1.834 7.676 3.35 14.552 8.938 18.484-2.374.507-4.208 1.611-5.045 2.156Zm22.178-8.412c-1.178 4.42-5.16 7.849-7.783 7.849-.453 0-.858-.102-1.2-.3.904-1.984 1.947-6.993-5.656-13.332-7.014-5.885-1.538-16.318-1.29-16.817l.045.44c.521 4.825 1.947 6.864 10.952 12.039 4.253 2.441 6.02 6.035 4.932 10.12Z"/></g></svg>
+      </div>
+      <span class="brand-eyebrow">Pitang Labs · Design Engineering</span>
+      <h1 class="brand-title">Bike Experience</h1>
+      <span class="brand-sub">Protótipo interativo de engenharia de design. Explore os fluxos em iOS, Android e Web.</span>
+    </div>
+    <ul class="flows"></ul>
+    <div class="controls">
+      <div class="ctl"><span class="ctl-label" id="l-device">Dispositivo</span><div class="seg" data-key="device" role="group" aria-labelledby="l-device"><button data-val="ios">iOS</button><button data-val="android">Android</button><button data-val="web">Web</button></div></div>
+      <div class="ctl"><span class="ctl-label" id="l-theme">Tema</span><div class="seg" data-key="theme" role="group" aria-labelledby="l-theme"><button data-val="light">Claro</button><button data-val="dark">Escuro</button></div></div>
+      <div class="ctl"><span class="ctl-label" id="l-text">Tipografia</span><div class="seg" data-key="text" role="group" aria-labelledby="l-text"><button data-val="default">Padrão</button><button data-val="large">Ampliada</button></div></div>
+      <div class="ctl"><span class="ctl-label" id="l-annot">Rótulos</span><div class="seg" data-key="annot" role="group" aria-labelledby="l-annot"><button data-val="on">Ligado</button><button data-val="off">Desligado</button></div></div>
+      <div class="ctl"><span class="ctl-label" id="l-motion">Movimento</span><div class="seg" data-key="motion" role="group" aria-labelledby="l-motion"><button data-val="full">Completo</button><button data-val="reduced">Reduzido</button></div></div>
+      <button class="tour-again" type="button" id="btn-tour">Conhecer o Protótipo</button>
+      <div class="keys"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> ou <kbd>←</kbd> <kbd>→</kbd> variações · <kbd>↑</kbd> <kbd>↓</kbd> fluxos · <kbd>R</kbd> replay</div>
+    </div>
+  </aside>
+  <main class="stage">
+    <div class="stage-h" aria-live="polite"><div class="stage-flow"></div><div class="stage-ver"></div></div>
+    <div class="device-wrap"><div class="device"><div class="island" aria-hidden="true"></div><div class="ph" id="screen" data-theme="light"></div></div></div>
+  </main>
+  <aside class="notes" aria-label="Notas desta versão"></aside>
+</div>
+
+<script>/* ==========================================================================
+   SKELETON KIT (JS): tiny helpers that return wireframe markup.
+   ========================================================================== */
+(function () {
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const P = {
+    search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>',
+    user: '<circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1.2-3.6 4-5.2 7-5.2s5.8 1.6 7 5.2"/>',
+    back: '<path d="M15 5l-7 7 7 7"/>',
+    close: '<path d="M6 6l12 12M18 6L6 18"/>',
+    bag: '<path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6.5a3 3 0 016 0V8"/>',
+    heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>',
+    share: '<path d="M12 4v11M8 8l4-4 4 4"/><path d="M5 13v6h14v-6"/>',
+    play: '<path d="M9 7l9 5-9 5V7z" fill="currentColor"/>',
+    image: '<rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M5 17l5-4 3 2.5 2-1.5 4 3"/>',
+    map: '<path d="M4 7l5-2 6 2 5-2v12l-5 2-6-2-5 2V7z"/><path d="M9 5v12M15 7v12"/>',
+    cube: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    chart: '<path d="M5 19V9M10 19V5M15 19v-7M20 19v-4"/>',
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  };
+  function icon(name) { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] || P.image}</svg>`; }
+
+  const status = () => `<div class="sk-status" aria-hidden="true"><span>9:41</span><span><i></i></span></div>`;
+
+  function bar(o = {}) {
+    const left = o.back ? `<button class="sk-ic sk-press" data-back aria-label="Back">${icon("back")}</button>` : `<span class="sk-logo" aria-label="Logo placeholder">LOGO</span>`;
+    const mid = o.title ? `<span class="sk-title-bar">${esc(o.title)}</span>` : "";
+    const right = (o.icons || ["search", "user"]).map((n) => `<button class="sk-ic sk-press" aria-label="${esc(n)}">${icon(n)}</button>`).join("");
+    return `${status()}<header class="sk-bar"${o.clear ? " data-clear" : ""}>${left}${mid}<span class="sk-sp"></span>${right}</header>`;
+  }
+
+  const TABS = [["home", "Home"], ["bikes", "Bikes"], ["build", "Build"], ["garage", "Garage"], ["rides", "Rides"]];
+  function tabs(active) {
+    return `<nav class="sk-tabs" aria-label="Main">${TABS.map(([id, l]) => `<button class="sk-tab" data-tab="${id}" ${id === active ? 'aria-current="page"' : ""}><i aria-hidden="true"></i>${l}</button>`).join("")}</nav><span class="sk-home" aria-hidden="true"></span>`;
+  }
+
+  // media placeholder: ratio "4/5", tag label, glyph icon, bleed edge
+  function media(o = {}) {
+    const st = o.h ? `height:${o.h}px` : `aspect-ratio:${o.ratio || "16/10"}`;
+    return `<div class="sk-media"${o.bleed ? " data-bleed" : ""} style="${st}${o.w ? `;width:${o.w}px` : ""}" role="img" aria-label="${esc(o.tag || "Image placeholder")}">${o.tag ? `<span class="sk-tag">${esc(o.tag)}</span>` : ""}${o.glyph ? `<span class="sk-glyph">${icon(o.glyph)}</span>` : ""}</div>`;
+  }
+  // text lines: widths in %, first can be a title
+  function lines(ws = [70, 90, 55], o = {}) {
+    return `<div class="sk-lines" aria-hidden="true">${ws.map((w, i) => `<span class="sk-l"${i === 0 && o.title ? (o.xl ? " data-xl" : " data-t") : ""} style="width:${w}%"></span>`).join("")}</div>`;
+  }
+  const tag = (t) => `<span class="sk-tag sk-tag-inline">${esc(t)}</span>`;
+
+  function on(root, sel, type, fn) {
+    const h = (e) => { const t = e.target.closest(sel); if (t && root.contains(t)) fn(e, t); };
+    root.addEventListener(type, h);
+    return () => root.removeEventListener(type, h);
+  }
+
+  function toast(root, msg) {
+    let t = root.querySelector(".sk-toast");
+    if (!t) { t = document.createElement("div"); t.className = "sk-toast"; t.setAttribute("role", "status"); root.appendChild(t); }
+    t.textContent = msg; t.removeAttribute("data-on");
+    requestAnimationFrame(() => t.setAttribute("data-on", ""));
+    clearTimeout(t._h); t._h = setTimeout(() => t.removeAttribute("data-on"), 2200);
+  }
+
+  function sheet(root, html, o = {}) {
+    const scrim = document.createElement("div"); scrim.className = "sk-scrim";
+    const el = document.createElement("section"); el.className = "sk-sheet";
+    el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", o.label || "Sheet");
+    el.innerHTML = `<span class="sk-grab" aria-hidden="true"></span>${html}`;
+    root.append(scrim, el);
+    const close = () => { el.removeAttribute("data-open"); scrim.removeAttribute("data-open"); setTimeout(() => { el.remove(); scrim.remove(); }, 430); };
+    scrim.addEventListener("click", close);
+    el.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } });
+    el.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) close(); });
+    requestAnimationFrame(() => { scrim.setAttribute("data-open", ""); el.setAttribute("data-open", ""); const f = el.querySelector("button"); f && f.focus({ preventScroll: true }); });
+    return { close, el };
+  }
+
+  window.Kit = { esc, icon, status, bar, tabs, media, lines, tag, on, toast, sheet, TABS };
+})();
+</script>
+<script>/* ==========================================================================
+   VIEWER: flows (left), phone (centre), notes (right), version picker.
+   Pitang Labs · Design Engineering
+   ========================================================================== */
+(function () {
+  const { esc } = window.Kit;
+
+  /* ---- Personas de Validação ---- */
+  const PERSONAS = {
+    racer: { name: "Racer", tag: "Foco em Performance", color: "#2f5d9e", ini: "R", line: "Competidor e entusiasta que analisa tabelas geométricas detalhadas.", quote: "Mostre-me os dados e especificações.", needs: "Detalhes de especificação, peso, rigidez e checkout veloz." },
+    weekend: { name: "Ciclista de Fim de Semana", tag: "Passeios & Grupos", color: "#ED1C24", ini: "W", line: "Pedala com amigos, prioriza conforto, durabilidade e ergonomia.", quote: "Quero uma experiência especial, sem complicação.", needs: "Ajuste ideal (bike fit), comunidade e manutenção simplificada." },
+    first: { name: "Primeiro Investimento", tag: "Entusiasta em Evolução", color: "#9a5a12", ini: "F", line: "Buscando sua primeira bicicleta de alta performance.", quote: "Como garanto o tamanho perfeito para meu corpo?", needs: "Confiança, verificação de medidas e transparência total de custos." },
+    explorer: { name: "Explorador Gravel", tag: "Aventura & Terra", color: "#7a3f8f", ini: "G", line: "Mapeia trilhas e rotas mistas, viajando com a bike.", quote: "Até onde este equipamento pode me levar?", needs: "Inspiração de rotas, robustez e acessórios integrados." },
+  };
+
+  /* ---- Flows: meta lives here so chrome stays consistent ---- */
+  const FLOWS = [
+    { id: "home", title: "Home", sum: "Página inicial: primeiro contato com a linha de produtos.", today: ["Layout atual da home: topo e rolagem"] },
+    { id: "bike", title: "Página da Bike", sum: "Onde o ciclista analisa detalhes e toma a decisão.", today: ["Página de produto atual"] },
+    { id: "build", title: "Configurador", sum: "Escolha personalizada de componentes sem fricção.", today: ["Configurador atual"] },
+    { id: "checkout", title: "Checkout", sum: "Pagamento transparente e sem surpresas.", today: ["Checkout atual: etapas 1 e 2"] },
+    { id: "garage", title: "Minha Garagem", sum: "Acompanhamento pós-entrega e revisões.", today: ["Área da conta do cliente"] },
+    { id: "rides", title: "Pedais & Rotas", sum: "Comunidade, eventos e incentivo ao pedal.", today: ["Página de eventos atual"] },
+  ];
+
+  const registry = {};
+  window.Proto = {
+    versions(flowId, list) { registry[flowId] = list; },
+    personas: PERSONAS,
+    get registry() { return registry; },
+    get flows() { return FLOWS; },
+  };
+
+  /* ---- State ---- */
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("protokit:" + k); return v == null ? d : v; } catch { return d; } },
+    set(k, v) { try { localStorage.setItem("protokit:" + k, v); } catch {} },
+  };
+  const params = (() => { try { return new URLSearchParams(location.search); } catch { return new URLSearchParams(); } })();
+  const prefersReduced = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } })();
+  const state = {
+    flow: Math.max(0, FLOWS.findIndex((f) => f.id === (params.get("flow") || store.get("flow", "home")))),
+    v: (parseInt(params.get("v") || store.get("v", "1"), 10) || 1) - 1,
+    theme: store.get("theme", "light"),
+    text: store.get("text", "default"),
+    motion: prefersReduced ? "reduced" : store.get("motion", "full"),
+    annot: store.get("annot", "on"),
+    device: ["ios", "android", "web"].includes(params.get("device")) ? params.get("device") : store.get("device", "ios"),
+  };
+
+  /* Frame sizes: outer device box and the screen inside it (CSS px) */
+  const DEVICES = {
+    ios: { w: 414, h: 868, label: "iPhone" },
+    android: { w: 436, h: 939, label: "Android" },
+    web: { w: 1280, h: 820, label: "Web" },
+  };
+
+  let screen, deviceWrap, device, cleanup = null;
+
+  /* ---- Build chrome ---- */
+  function build() {
+    const flowsEl = document.querySelector(".flows");
+    flowsEl.innerHTML = FLOWS.map((f, i) => `<li><button class="flow-btn" data-flow="${i}"><span class="flow-num">${String(i + 1).padStart(2, "0")}</span><span class="flow-title">${esc(f.title)}</span><span class="flow-sum">${esc(f.sum)}</span></button></li>`).join("");
+    flowsEl.addEventListener("click", (e) => { const b = e.target.closest(".flow-btn"); if (b) setFlow(+b.dataset.flow, 0); });
+
+    screen = document.getElementById("screen");
+    deviceWrap = document.querySelector(".device-wrap");
+    device = document.querySelector(".device");
+
+    segs();
+    fit();
+    window.addEventListener("resize", () => { fit(); moveHighlight(); });
+
+    // Keyboard navigation
+    document.addEventListener("keydown", (e) => {
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key !== "Escape" && e.target.closest && e.target.closest("#screen") && e.target !== screen) return;
+      if (e.key === "Escape") { closePop(); return; }
+      const n = versions().length;
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= n) setVersion(num - 1);
+      else if (e.key === "ArrowRight") setVersion((state.v + 1) % n);
+      else if (e.key === "ArrowLeft") setVersion((state.v - 1 + n) % n);
+      else if (e.key === "ArrowDown") { e.preventDefault(); setFlow((state.flow + 1) % FLOWS.length, 0); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); setFlow((state.flow - 1 + FLOWS.length) % FLOWS.length, 0); }
+      else if (e.key === "r" || e.key === "R") mount();
+    });
+    document.addEventListener("click", (e) => { if (!e.target.closest(".persona, .pop")) closePop(); });
+  }
+
+  /* ---- Segmented controls (theme / text / motion) ---- */
+  function segs() {
+    document.querySelectorAll(".seg").forEach((seg) => {
+      const key = seg.dataset.key;
+      const btns = [...seg.querySelectorAll("button")];
+      const thumb = document.createElement("span"); thumb.className = "seg-thumb"; thumb.setAttribute("aria-hidden", "true"); seg.prepend(thumb);
+      const sync = () => {
+        btns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.val === state[key])));
+        const a = btns.find((b) => b.dataset.val === state[key]) || btns[0];
+        thumb.style.width = a.offsetWidth + "px"; thumb.style.transform = `translateX(${a.offsetLeft - 2}px)`;
+      };
+      btns.forEach((b) => b.addEventListener("click", () => { state[key] = b.dataset.val; store.set(key, state[key]); sync(); applyPrefs(); if (key === "device") { persist(); mount(); } }));
+      seg._sync = sync; sync();
+      requestAnimationFrame(() => requestAnimationFrame(() => seg.setAttribute("data-ready", "")));
+    });
+  }
+
+  function applyPrefs() {
+    screen.dataset.theme = state.theme;
+    screen.style.setProperty("--fs", state.text === "large" ? "1.18" : "1");
+    screen.toggleAttribute("data-reduced-motion", state.motion === "reduced");
+    screen.dataset.annot = state.annot;
+    screen.dataset.device = state.device;
+    if (device && device.dataset.device !== state.device) { device.dataset.device = state.device; fit(); }
+  }
+
+  /* ---- Fit phone to available height ---- */
+  function fit() {
+    const stage = document.querySelector(".stage");
+    const head = document.querySelector(".stage-h");
+    const narrow = window.innerWidth <= 760;
+    const availH = (narrow ? window.innerHeight * 0.86 : stage.clientHeight - head.offsetHeight - 10 - 96);
+    const availW = stage.clientWidth - 32;
+    const D = DEVICES[state.device] || DEVICES.ios;
+    const s = Math.max(state.device === "web" ? 0.2 : 0.42, Math.min(1, availH / D.h, availW / D.w));
+    device.dataset.device = state.device;
+    device.style.transform = `scale(${s})`;
+    deviceWrap.style.width = D.w * s + "px";
+    deviceWrap.style.height = D.h * s + "px";
+    window.__phoneScale = s;
+  }
+
+  /* ---- Picker (Emil PICKER.md) ---- */
+  let picker, highlight, items = [];
+  function buildPicker() {
+    const vs = versions();
+    if (!picker) { picker = document.createElement("nav"); picker.className = "proto-picker"; picker.setAttribute("aria-label", "Variações do protótipo"); (document.querySelector(".stage") || document.body).appendChild(picker); }
+    picker.removeAttribute("data-ready");
+    picker.innerHTML = `<span class="proto-picker-highlight" aria-hidden="true"></span>` +
+      vs.map((v) => `<button class="proto-picker-item">${esc(v.name)}</button>`).join("") +
+      `<span class="proto-picker-divider" aria-hidden="true"></span><button class="proto-picker-item proto-picker-replay" aria-label="Replay animação (R)">↻</button>`;
+    highlight = picker.querySelector(".proto-picker-highlight");
+    items = [...picker.querySelectorAll(".proto-picker-item:not(.proto-picker-replay)")];
+    items.forEach((el, i) => el.addEventListener("click", () => setVersion(i)));
+    picker.querySelector(".proto-picker-replay").addEventListener("click", () => mount());
+    markPicker();
+    requestAnimationFrame(() => requestAnimationFrame(() => picker.setAttribute("data-ready", "")));
+  }
+
+  function markPicker() {
+    items.forEach((el, j) => { el.toggleAttribute("data-active", j === state.v); if (j === state.v) el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current"); });
+    moveHighlight();
+  }
+
+  function moveHighlight() {
+    const el = items[state.v]; if (!el || !highlight) return;
+    highlight.style.width = el.offsetWidth + "px";
+    highlight.style.transform = `translateX(${el.offsetLeft}px)`;
+  }
+
+  const versions = () => registry[FLOWS[state.flow].id] || [];
+
+  function setFlow(i, v = 0) {
+    state.flow = i; state.v = v;
+    document.querySelectorAll(".flow-btn").forEach((b, j) => b.setAttribute("aria-current", String(j === i)));
+    buildPicker();
+    renderVersion();
+  }
+
+  function setVersion(i) {
+    const n = versions().length; if (i < 0 || i >= n) return;
+    state.v = i; markPicker(); renderVersion();
+  }
+
+  function persist() {
+    store.set("flow", FLOWS[state.flow].id); store.set("v", String(state.v + 1));
+    try { const u = new URL(location.href); u.searchParams.set("flow", FLOWS[state.flow].id); u.searchParams.set("v", state.v + 1); u.searchParams.set("device", state.device); history.replaceState(null, "", u); } catch {}
+  }
+
+  function renderVersion() {
+    const f = FLOWS[state.flow], ver = versions()[state.v];
+    if (!ver) { state.v = 0; }
+    persist();
+    document.querySelector(".stage-flow").textContent = `${String(state.flow + 1).padStart(2, "0")} · ${f.title}`;
+    document.querySelector(".stage-ver").textContent = versions()[state.v]?.name || "-";
+    document.title = `${versions()[state.v]?.name || f.title} · Pitang Labs`;
+    notes();
+    mount();
+  }
+
+  /* ---- Mount ---- */
+  function mount() {
+    const ver = versions()[state.v];
+    if (cleanup) { try { cleanup(); } catch {} cleanup = null; }
+    const fresh = screen.cloneNode(false);
+    fresh.removeAttribute("style");
+    screen.replaceWith(fresh);
+    screen = fresh;
+    applyPrefs();
+    if (!ver) { screen.innerHTML = `<div style="display:grid;place-items:center;height:100%;color:var(--ink-3)">Carregando…</div>`; return; }
+    requestAnimationFrame(() => {
+      try { cleanup = ver.render(screen, ctx) || null; }
+      catch (err) { console.error(err); screen.innerHTML = `<pre style="padding:60px 16px;white-space:pre-wrap;color:#c81300;font:12px/1.4 monospace">${esc(err.stack || err)}</pre>`; }
+    });
+  }
+
+  const ctx = {
+    go(flowId, v = 0) { const i = FLOWS.findIndex((f) => f.id === flowId); if (i >= 0) setFlow(i, v); },
+    toast(msg, o) { window.Kit.toast(screen, msg, o); },
+    get theme() { return state.theme; },
+    get large() { return state.text === "large"; },
+    get reduced() { return state.motion === "reduced"; },
+    personas: PERSONAS,
+  };
+
+  /* Global tab routing */
+  const TAB_ROUTES = { home: ["home", 0], bikes: ["bike", 0], build: ["build", 0], garage: ["garage", 0], rides: ["rides", 0] };
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest(".ph .sk-tab");
+    if (!t || e.defaultPrevented) return;
+    const r = TAB_ROUTES[t.dataset.tab]; if (!r) return;
+    const cur = FLOWS[state.flow];
+    if (cur.id === r[0] && state.v === r[1]) { const sc = screen.querySelector(".sk-scroll"); if (sc) sc.scrollTo({ top: 0, behavior: state.motion === "reduced" ? "auto" : "smooth" }); return; }
+    ctx.go(r[0], r[1]);
+  });
+
+  /* ---- Notes panel ---- */
+  function notes() {
+    const f = FLOWS[state.flow], v = versions()[state.v] || {};
+    const el = document.querySelector(".notes");
+    const ps = (v.personas || []).map((id) => { const p = PERSONAS[id]; return p ? `<button class="persona" data-p="${id}" aria-expanded="false"><i style="background:${p.color}">${esc(p.ini)}</i>${esc(p.name)}</button>` : ""; }).join("");
+    const li = (arr) => (arr || []).map((x) => `<li>${esc(x)}</li>`).join("");
+    el.innerHTML = `
+      <section class="n-block"><h2 class="n-h">Direção de Design</h2><p class="n-axis">${esc(v.axis || "")}</p></section>
+      ${ps ? `<section class="n-block"><h2 class="n-h">Construído para</h2><div class="personas">${ps}</div></section>` : ""}
+      ${v.fixes ? `<section class="n-block"><h2 class="n-h">Problema que resolve</h2><ul class="n-list">${li(v.fixes)}</ul></section>` : ""}
+      ${v.tryThis ? `<section class="n-block"><h2 class="n-h">Experimente na tela</h2><ul class="n-list n-try">${li(v.tryThis)}</ul></section>` : ""}
+      ${v.motion ? `<section class="n-block"><h2 class="n-h">Movimento & Transição</h2><p class="n-motion">${esc(v.motion)}</p></section>` : ""}
+      ${v.tradeoff ? `<section class="n-block"><h2 class="n-h">Tradeoff</h2><p class="n-motion">${esc(v.tradeoff)}</p></section>` : ""}
+      <section class="n-block"><h2 class="n-h">Referência de Base</h2><div class="today">${f.today.map((cap) => `<div class="today-ph"><span>${esc(cap)}</span></div>`).join("")}</div><p class="today-note">Evidências de design e hipóteses comparadas lado a lado com a experiência interativa.</p></section>`;
+    el.querySelectorAll(".persona").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); togglePop(b); }));
+  }
+
+  /* ---- Persona popover ---- */
+  let pop, popFor = null;
+  function togglePop(btn) {
+    if (popFor === btn) return closePop();
+    closePop();
+    const p = PERSONAS[btn.dataset.p];
+    if (!pop) { pop = document.createElement("div"); pop.className = "pop"; pop.setAttribute("role", "dialog"); document.body.appendChild(pop); }
+    pop.innerHTML = `<b>${esc(p.name)} · ${esc(p.tag)}</b>${esc(p.line)}<q>${esc(p.quote)}</q><div><strong>Necessidades:</strong> ${esc(p.needs)}</div><div class="src">Persona de validação · Pitang Labs</div>`;
+    const r = btn.getBoundingClientRect();
+    let left = Math.min(r.left, window.innerWidth - 276), top = r.bottom + 8;
+    const below = top + 220 < window.innerHeight;
+    if (!below) top = r.top - 8 - 200;
+    pop.style.left = left + "px"; pop.style.top = top + "px";
+    pop.style.setProperty("--origin", `${r.left - left + 16}px ${below ? "0" : "100%"}`);
+    btn.setAttribute("aria-expanded", "true"); popFor = btn;
+    requestAnimationFrame(() => pop.setAttribute("data-open", ""));
+  }
+  function closePop() { if (pop) pop.removeAttribute("data-open"); if (popFor) popFor.setAttribute("aria-expanded", "false"); popFor = null; }
+
+  /* ---- Boot ---- */
+  window.addEventListener("DOMContentLoaded", () => {
+    build();
+    const vMax = (registry[FLOWS[state.flow].id] || []).length;
+    setFlow(state.flow, Math.min(Math.max(0, state.v), Math.max(0, vMax - 1)));
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { moveHighlight(); document.querySelectorAll(".seg").forEach((s) => s._sync && s._sync()); });
+  });
+})();
+</script>
+<script>/* ==========================================================================
+   SCREENS: six flows × three directions, all skeleton. Register each flow with
+   Proto.versions("<flowId>", [ { name, axis, personas, fixes, tryThis, motion, tradeoff, render } ])
+   ========================================================================== */
+(function () {
+  const K = window.Kit;
+  const { media, lines, tag, icon, esc } = K;
+
+  // assemble a phone screen: header bar, scrolling body, optional dock, tab bar
+  function frame(root, o) {
+    root.innerHTML = `${o.bar || K.bar()}<div class="sk-scroll"${o.full ? " data-full" : ""}>${o.body}</div>${o.dock || ""}${o.tabs === false ? `<span class="sk-home" aria-hidden="true"></span>` : K.tabs(o.tabs || "home")}`;
+    root.querySelectorAll(".sk-scroll > *").forEach((el, i) => { el.classList.add("sk-in"); el.style.setProperty("--i", Math.min(i, 6)); });
+  }
+  const back = (root, ctx, to = ["home", 0]) => K.on(root, "[data-back]", "click", () => ctx.go(to[0], to[1]));
+  const many = (...fns) => () => fns.forEach((f) => f && f());
+  // single-select groups: [data-group] containers whose [data-opt] children toggle aria-pressed
+  const select = (root) => K.on(root, "[data-opt]", "click", (e, b) => {
+    b.closest("[data-group]").querySelectorAll("[data-opt]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  });
+  const card = (inner, o = {}) => `<div class="sk-card${o.press ? " sk-press" : ""}"${o.go ? ` role="button" tabindex="0" data-go="${o.go}"` : ""}>${inner}</div>`;
+  const goCards = (root, ctx) => K.on(root, "[data-go]", "click", (e, el) => { const [f, v] = el.dataset.go.split(":"); ctx.go(f, +v || 0); });
+  const sec = (label, link) => `<div class="sk-sec">${tag(label)}${link ? `<span class="sk-l" style="width:64px"></span>` : ""}</div>`;
+
+  /* ------------------------------------------------------------------ 01 HOME */
+  Proto.versions("home", [
+    {
+      name: "Showroom",
+      axis: "Lead with the product: one full-bleed hero film, then the range as a swipeable rail. The bike does the talking before any copy does.",
+      personas: ["racer", "weekend"],
+      fixes: ["Today the home page opens on a promo banner, not a bike", "The range is buried three taps deep"],
+      tryThis: ["Swipe the range rail", "Tap a bike card to open its page"],
+      motion: "Rail settles with scroll-snap. Content rises 6px and fades in over 260ms, once per visit.",
+      tradeoff: "Heavy hero media costs load time on a phone signal.",
+      render(root, ctx) {
+        frame(root, {
+          bar: K.bar({ clear: true }),
+          full: true,
+          body: `${media({ ratio: "4/5", bleed: true, tag: "Hero film · 4:5", glyph: "play" })}
+            <div class="sk-pad" style="margin-top:-56px;position:relative;z-index:2">${card(`${lines([70, 90, 40], { title: true, xl: true })}<button class="sk-btn">Primary action</button>`)}</div>
+            ${sec("Range rail", true)}
+            <div class="sk-rail">${[0, 1, 2, 3].map(() => `<div style="width:220px">${card(`${media({ ratio: "4/3", glyph: "image" })}${lines([80, 50], { title: true })}`, { press: true, go: "bike:0" })}</div>`).join("")}</div>
+            ${sec("Why choose us")}
+            <div class="sk-pad sk-stack">${[0, 1, 2].map(() => `<div class="sk-row"><span class="sk-av"></span>${lines([60, 85])}</div>`).join("")}</div>`,
+        });
+        return many(goCards(root, ctx));
+      },
+    },
+    {
+      name: "Ride feed",
+      axis: "Lead with riding, not shopping: a feed of rides, routes and events, with products woven in only where they belong.",
+      personas: ["weekend", "explorer"],
+      fixes: ["Nothing today gives a reason to open the app between purchases", "Community lives on other platforms"],
+      tryThis: ["Switch the filter chips", "Tap the product card in the feed"],
+      motion: "Chips swap state in 150ms. No motion on scroll: a feed is read, not watched.",
+      tradeoff: "Needs a steady supply of rides and stories, or it feels empty.",
+      render(root, ctx) {
+        frame(root, {
+          body: `<div style="padding-top:14px" data-group><div class="sk-chips">${["All", "Rides", "Routes", "Events", "Kit"].map((c, i) => `<button class="sk-chip" data-opt aria-pressed="${i === 0}">${c}</button>`).join("")}</div></div>
+            <div class="sk-pad sk-stack" style="margin-top:14px">
+              ${card(`<div class="sk-row"><span class="sk-av"></span>${lines([45, 30])}</div>${media({ ratio: "4/3", tag: "Ride photo", glyph: "image" })}${lines([90, 70])}`)}
+              ${card(`${tag("Product card")}<div class="sk-row">${media({ h: 84, w: 110, glyph: "image" })}${lines([80, 50, 35], { title: true })}</div>`, { press: true, go: "bike:0" })}
+              ${card(`${tag("Event")}${media({ ratio: "16/9", glyph: "map" })}${lines([75, 50], { title: true })}<button class="sk-btn" data-ghost>Secondary action</button>`)}
+            </div>`,
+        });
+        return many(select(root), goCards(root, ctx));
+      },
+    },
+    {
+      name: "Bike finder",
+      axis: "Lead with a question: three taps narrow the range to the two bikes that suit how you ride.",
+      personas: ["first", "weekend"],
+      fixes: ["First-time buyers don't know where to start", "Range names mean nothing to newcomers"],
+      tryThis: ["Pick an answer, then tap Next", "See the two matches"],
+      motion: "Questions cross-fade in 200ms; the progress dot stretches to show where you are.",
+      tradeoff: "One more step before seeing bikes, which some experts will skip.",
+      render(root, ctx) {
+        let step = 0;
+        const draw = () => {
+          const body = step < 3
+            ? `<div class="sk-pad sk-stack" style="padding-top:24px"><div class="sk-dots">${[0, 1, 2].map((i) => `<i ${i === step ? "data-on" : ""}></i>`).join("")}</div>
+                ${tag(`Question ${step + 1} of 3`)}${lines([85, 60], { title: true, xl: true })}
+                <div class="sk-stack" data-group>${[0, 1, 2].map((i) => `<button class="sk-opt" data-opt aria-pressed="${i === 0}"><span class="sk-radio"></span>${lines([60 + i * 8, 40])}</button>`).join("")}</div></div>`
+            : `<div class="sk-pad sk-stack" style="padding-top:24px">${tag("Your two matches")}${lines([70], { title: true, xl: true })}
+                ${[0, 1].map(() => card(`${media({ ratio: "16/10", glyph: "image" })}${lines([60, 40], { title: true })}`, { press: true, go: "bike:0" })).join("")}
+                <button class="sk-btn" data-ghost data-restart>Start again</button></div>`;
+          frame(root, { body, dock: step < 3 ? `<div class="sk-dock" style="bottom:96px;background:transparent;box-shadow:none;padding-bottom:0"><button class="sk-btn" data-next>${step < 2 ? "Next" : "Show my matches"}</button></div>` : "" });
+        };
+        draw();
+        return many(select(root), goCards(root, ctx),
+          K.on(root, "[data-next]", "click", () => { step++; draw(); }),
+          K.on(root, "[data-restart]", "click", () => { step = 0; draw(); }));
+      },
+    },
+  ]);
+
+  /* ------------------------------------------------------------------ 02 BIKE PAGE */
+  const priceDock = (label = "Primary action") => `<div class="sk-dock"><div style="flex:1">${lines([60, 40], { title: true })}</div><button class="sk-btn" style="width:auto;padding:0 22px" data-cta>${label}</button></div>`;
+  Proto.versions("bike", [
+    {
+      name: "Gallery first",
+      axis: "The bike page as a gallery: swipe big images first, then colour, then one clear action docked at the bottom.",
+      personas: ["weekend", "racer"],
+      fixes: ["Images are small and the price sits below the fold", "Colour choice is hidden in a dropdown"],
+      tryThis: ["Swipe the gallery", "Pick a colour swatch", "Tap the docked action"],
+      motion: "Gallery dots stretch to follow the image. Swatches ring in 160ms.",
+      tradeoff: "Spec detail moves further down the page.",
+      render(root, ctx) {
+        frame(root, {
+          bar: K.bar({ back: true, icons: ["heart", "share"] }), tabs: false,
+          body: `<div class="sk-rail" data-gal style="padding:16px 16px 0">${[0, 1, 2, 3].map((i) => `<div style="width:358px">${media({ ratio: "1/1", tag: `Gallery ${i + 1}/4`, glyph: "image" })}</div>`).join("")}</div>
+            <div class="sk-dots" style="margin-top:12px" data-galdots>${[0, 1, 2, 3].map((i) => `<i ${i === 0 ? "data-on" : ""}></i>`).join("")}</div>
+            <div class="sk-pad sk-stack" style="margin-top:18px">${lines([75, 45], { title: true, xl: true })}${tag("Colour")}
+              <div class="sk-row" data-group>${[0, 1, 2, 3].map((i) => `<button class="sk-opt" data-opt aria-pressed="${i === 0}" style="width:56px;height:56px;min-height:0;padding:0;justify-content:center;border-radius:50%" aria-label="Colour ${i + 1}"><span class="sk-av" style="width:36px;height:36px;opacity:${1 - i * 0.2}"></span></button>`).join("")}</div>
+              ${lines([95, 90, 70])}</div>`,
+          dock: priceDock(),
+        });
+        const rail = root.querySelector("[data-gal]"), dots = [...root.querySelectorAll("[data-galdots] i")];
+        const onScroll = () => { const i = Math.round(rail.scrollLeft / 370); dots.forEach((d, j) => d.toggleAttribute("data-on", j === i)); };
+        rail.addEventListener("scroll", onScroll, { passive: true });
+        return many(back(root, ctx), select(root), K.on(root, "[data-cta]", "click", () => ctx.go("build", 0)));
+      },
+    },
+    {
+      name: "Spec sheet",
+      axis: "The bike page for people who compare: tabs for overview, geometry and spec, with a compare toggle that keeps your shortlist.",
+      personas: ["racer"],
+      fixes: ["Geometry lives in a PDF", "No way to compare two frames side by side"],
+      tryThis: ["Switch between the tabs", "Toggle Compare"],
+      motion: "Tab content swaps without movement; only the segmented thumb slides (180ms).",
+      tradeoff: "Dense, and less inviting for a first-time buyer.",
+      render(root, ctx) {
+        const rows = (n) => `<div class="sk-card" style="gap:0;padding:4px 12px">${Array.from({ length: n }, (_, i) => `<div class="sk-row" style="justify-content:space-between;padding:12px 0;${i ? "border-top:1px solid var(--sk-line)" : ""}"><span class="sk-l" style="width:38%"></span><span class="sk-l" style="width:22%"></span></div>`).join("")}</div>`;
+        const panes = [rows(5), `${media({ ratio: "16/9", tag: "Geometry diagram", glyph: "chart" })}${rows(4)}`, rows(7)];
+        frame(root, {
+          bar: K.bar({ back: true, title: "", icons: ["share"] }), tabs: false,
+          body: `<div class="sk-pad sk-stack" style="padding-top:16px"><div class="sk-row">${media({ h: 90, w: 120, glyph: "image" })}${lines([80, 50, 30], { title: true })}</div>
+            <div class="sk-seg" data-group>${["Overview", "Geometry", "Spec"].map((t, i) => `<button data-opt data-pane="${i}" aria-pressed="${i === 0}">${t}</button>`).join("")}</div>
+            <div data-pane-body>${panes[0]}</div>
+            <button class="sk-opt" data-compare aria-pressed="false"><span class="sk-radio"></span><span style="font-weight:600">Compare</span></button></div>`,
+          dock: priceDock(),
+        });
+        return many(back(root, ctx), select(root),
+          K.on(root, "[data-pane]", "click", (e, b) => { root.querySelector("[data-pane-body]").innerHTML = panes[+b.dataset.pane]; }),
+          K.on(root, "[data-compare]", "click", (e, b) => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); ctx.toast(on ? "Added to compare" : "Removed from compare"); }),
+          K.on(root, "[data-cta]", "click", () => ctx.go("build", 0)));
+      },
+    },
+    {
+      name: "Ride story",
+      axis: "The bike page as a story: scroll through where it rides, why it's built that way, and who it's for, before the price.",
+      personas: ["explorer", "first"],
+      fixes: ["Product pages say what a bike is, never what it's for", "No sense of the ride before you buy"],
+      tryThis: ["Scroll the full story", "Notice the action only docks after the first chapter"],
+      motion: "The dock slides up once you pass chapter one (220ms) and stays put.",
+      tradeoff: "Longer page; people who already know what they want scroll past it.",
+      render(root, ctx) {
+        const chapter = (n) => `${media({ ratio: "4/5", bleed: true, tag: `Chapter ${n}`, glyph: n === 1 ? "play" : "image" })}<div class="sk-pad sk-stack" style="padding:20px 16px 28px">${lines([60, 95, 90, 55], { title: true })}</div>`;
+        frame(root, {
+          bar: K.bar({ back: true, clear: true, icons: ["heart"] }), full: true, tabs: false,
+          body: `${chapter(1)}<div data-ch2></div>${chapter(2)}<div class="sk-pad">${card(`${tag("Built for")}${[0, 1, 2].map(() => `<div class="sk-row"><span class="sk-av"></span>${lines([70])}</div>`).join("")}`)}</div>${chapter(3)}`,
+          dock: `<div data-dockwrap style="transform:translateY(110%);transition:transform 220ms var(--ease-out);position:absolute;inset:auto 0 0 0;z-index:24">${priceDock()}</div>`,
+        });
+        const sc = root.querySelector(".sk-scroll"), dw = root.querySelector("[data-dockwrap]");
+        const onS = () => { if (sc.scrollTop > 380) dw.style.transform = "none"; };
+        sc.addEventListener("scroll", onS, { passive: true });
+        return many(back(root, ctx), K.on(root, "[data-cta]", "click", () => ctx.go("build", 0)));
+      },
+    },
+  ]);
+
+  /* ------------------------------------------------------------------ 03 BUILD */
+  Proto.versions("build", [
+    {
+      name: "Step by step",
+      axis: "Configure in four short steps, one decision per screen, with a running total that never hides.",
+      personas: ["first", "weekend"],
+      fixes: ["Today every option sits on one long page", "The total only appears at checkout"],
+      tryThis: ["Pick an option and tap Next", "Watch the step dots and the total bar"],
+      motion: "Steps swap with a 200ms cross-fade; the selected option's dot pops in 180ms.",
+      tradeoff: "Four screens where an expert might want one.",
+      render(root, ctx) {
+        let step = 0; const names = ["Frame", "Wheels", "Groupset", "Fit"];
+        const draw = () => {
+          frame(root, {
+            bar: K.bar({ back: true, title: `Step ${step + 1} of 4`, icons: ["close"] }), tabs: false,
+            body: `<div class="sk-pad sk-stack" style="padding-top:18px"><div class="sk-dots">${names.map((_, i) => `<i ${i === step ? "data-on" : ""}></i>`).join("")}</div>
+              ${tag(names[step])}${lines([70, 45], { title: true, xl: true })}
+              <div class="sk-stack" data-group>${[0, 1, 2].map((i) => `<button class="sk-opt" data-opt aria-pressed="${i === 0}"><span class="sk-radio"></span><div style="flex:1">${lines([60 - i * 6, 40])}</div><span class="sk-l" style="width:44px"></span></button>`).join("")}</div></div>`,
+            dock: `<div class="sk-dock"><div style="flex:1">${tag("Running total")}<div style="margin-top:6px">${lines([50])}</div></div><button class="sk-btn" style="width:auto;padding:0 22px" data-next>${step < 3 ? "Next" : "Review"}</button></div>`,
+          });
+        };
+        draw();
+        return many(back(root, ctx, ["bike", 0]), select(root), K.on(root, "[data-next]", "click", () => { if (step < 3) { step++; draw(); } else ctx.go("checkout", 0); }));
+      },
+    },
+    {
+      name: "Live view",
+      axis: "Configure on the bike itself: a big live view, with options in a sheet you can pull up or put away.",
+      personas: ["racer", "weekend"],
+      fixes: ["Options change but the picture doesn't", "No way to see a colour on the actual frame"],
+      tryThis: ["Tap Options to open the sheet", "Pick a group, then close the sheet"],
+      motion: "The options sheet rises on a drawer curve (420ms) over a dimmed view.",
+      tradeoff: "A live 3D view is expensive to build and heavy to load.",
+      render(root, ctx) {
+        frame(root, {
+          bar: K.bar({ back: true, title: "", icons: ["share"] }), tabs: false,
+          body: `<div class="sk-pad sk-stack" style="padding-top:16px">${media({ ratio: "1/1", tag: "Live 360° view", glyph: "cube" })}<p style="margin:0;text-align:center;font-size:12px;color:var(--sk-ink-3)">Drag to rotate</p>
+            <div class="sk-chips" style="padding:0">${["Frame", "Colour", "Wheels", "Bars"].map((c, i) => `<span class="sk-chip">${c}</span>`).join("")}</div></div>`,
+          dock: `<div class="sk-dock"><button class="sk-btn" data-ghost data-sheet>Options</button><button class="sk-btn" data-cta>Primary action</button></div>`,
+        });
+        return many(back(root, ctx, ["bike", 0]),
+          K.on(root, "[data-sheet]", "click", () => {
+            const s = K.sheet(root, `${tag("Options")}<div class="sk-seg" data-group>${["Frame", "Colour", "Wheels"].map((t, i) => `<button data-opt aria-pressed="${i === 0}">${t}</button>`).join("")}</div><div class="sk-stack" data-group>${[0, 1, 2].map((i) => `<button class="sk-opt" data-opt aria-pressed="${i === 0}"><span class="sk-radio"></span>${lines([55, 35])}</button>`).join("")}</div><button class="sk-btn" data-close>Done</button>`, { label: "Options" });
+            K.on(s.el, "[data-opt]", "click", (e, b) => b.closest("[data-group]").querySelectorAll("[data-opt]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))));
+          }),
+          K.on(root, "[data-cta]", "click", () => ctx.go("checkout", 0)));
+      },
+    },
+    {
+      name: "Presets",
+      axis: "Start from three good builds and tweak, instead of starting from a blank frame.",
+      personas: ["first", "explorer"],
+      fixes: ["Too many choices up front", "No guidance on which parts go together"],
+      tryThis: ["Choose a preset", "Tap Customise to tweak it"],
+      motion: "The chosen preset rings in 160ms; nothing else moves.",
+      tradeoff: "Presets steer people, so they need careful merchandising.",
+      render(root, ctx) {
+        frame(root, {
+          bar: K.bar({ back: true, title: "", icons: ["close"] }), tabs: false,
+          body: `<div class="sk-pad sk-stack" style="padding-top:18px">${tag("Pick a starting build")}${lines([75], { title: true, xl: true })}
+            <div class="sk-stack" data-group>${["Preset A", "Preset B", "Preset C"].map((t, i) => `<button class="sk-opt" data-opt aria-pressed="${i === 0}" style="align-items:flex-start"><span class="sk-radio" style="margin-top:4px"></span><div style="flex:1" class="sk-stack">${media({ ratio: "16/7", tag: t, glyph: "image" })}${lines([60, 85])}</div></button>`).join("")}</div>
+            <button class="sk-btn" data-ghost data-custom>Customise</button></div>`,
+          dock: priceDock("Choose this build"),
+        });
+        return many(back(root, ctx, ["bike", 0]), select(root),
+          K.on(root, "[data-custom]", "click", () => ctx.go("build", 0)),
+          K.on(root, "[data-cta]", "click", () => ctx.go("checkout", 0)));
+      },
+    },
+  ]);
+
+  /* ------------------------------------------------------------------ 04 CHECKOUT */
+  Proto.versions("checkout", [
+    {
+      name: "One page",
+      axis: "Bag, delivery and payment on one calm page, with the full total stated once, at full weight, above the button.",
+      personas: ["racer", "weekend"],
+      fixes: ["Checkout spreads over five pages", "Delivery cost appears at the last step"],
+      tryThis: ["Pick a delivery option", "Place the order"],
+      motion: "Selections ring in 160ms. The confirmation is the only celebration.",
+      tradeoff: "A long page on small screens.",
+      render(root, ctx) {
+        const block = (t, body) => card(`${tag(t)}${body}`);
+        frame(root, {
+          bar: K.bar({ back: true, title: "Checkout", icons: [] }), tabs: false,
+          body: `<div class="sk-pad sk-stack" style="padding-top:16px">
+            ${block("Bag", `<div class="sk-row">${media({ h: 64, w: 84, glyph: "image" })}${lines([70, 40])}</div>`)}
+            ${block("Delivery", `<div class="sk-stack" data-group>${[0, 1].map((i) => `<button class="sk-opt" data-opt aria-pressed="${i === 0}"><span class="sk-radio"></span>${lines([55, 35])}</button>`).join("")}</div>`)}
+            ${block("Payment", `<div class="sk-row"><span class="sk-av" style="border-radius:6px;width:44px;height:30px"></span>${lines([50])}</div>`)}
+            ${block("Total", lines([90, 90, 60], { title: false }))}</div>`,
+          dock: `<div class="sk-dock"><button class="sk-btn" data-place>Place order</button></div>`,
+        });
+        return many(back(root, ctx, ["build", 0]), select(root), K.on(root, "[data-place]", "click", () => ctx.toast("Order placed. This is a prototype, so nothing was charged.")));
+      },
+    },
+    {
+      name: "Fit check first",
+      axis: "Before paying, check the size: two quick measurements give a size recommendation you can trust.",
+      personas: ["first"],
+      fixes: ["Wrong-size returns are expensive for everyone", "Size charts assume people know their inseam"],
+      tryThis: ["Move both sliders", "Read the recommendation, then continue"],
+      motion: "The recommendation fades in (200ms) once both answers are set.",
+      tradeoff: "An extra step at the most sensitive moment of the funnel.",
+      render(root, ctx) {
+        const slider = (t) => `<div class="sk-stack" style="gap:8px">${tag(t)}<input type="range" min="0" max="100" value="50" aria-label="${t}" style="width:100%;accent-color:var(--sk-accent);height:32px"></div>`;
+        frame(root, {
+          bar: K.bar({ back: true, title: "Fit check", icons: [] }), tabs: false,
+          body: `<div class="sk-pad sk-stack" style="padding-top:18px">${lines([80, 55], { title: true, xl: true })}${card(`${slider("Measurement 1")}${slider("Measurement 2")}`)}
+            <div data-rec style="opacity:.35;transition:opacity 200ms var(--ease-out)">${card(`${tag("Recommended size")}<div class="sk-row"><span class="sk-num">-</span>${lines([70, 45])}</div>`)}</div></div>`,
+          dock: `<div class="sk-dock"><button class="sk-btn" data-next>Continue to payment</button></div>`,
+        });
+        const moved = new Set();
+        const off = K.on(root, "input[type=range]", "input", (e, el) => { moved.add(el.getAttribute("aria-label")); if (moved.size === 2) root.querySelector("[data-rec]").style.opacity = 1; });
+        return many(back(root, ctx, ["build", 0]), off, K.on(root, "[data-next]", "click", () => ctx.go("checkout", 0)));
+      },
+    },
+    {
+      name: "Pay in parts",
+      axis: "Show every way to pay side by side, each with its real total, so spreading the cost never hides what it costs.",
+      personas: ["first", "weekend"],
+      fixes: ["Finance options appear as a small link", "Monthly price shown without the total"],
+      tryThis: ["Pick a plan", "Open the full terms"],
+      motion: "Plan cards ring in 160ms; the terms sheet rises on the drawer curve.",
+      tradeoff: "Showing totals makes finance look less tempting. That's the point.",
+      render(root, ctx) {
+        frame(root, {
+          bar: K.bar({ back: true, title: "How to pay", icons: [] }), tabs: false,
+          body: `<div class="sk-pad sk-stack" style="padding-top:18px">${lines([70], { title: true, xl: true })}
+            <div class="sk-stack" data-group>${["Pay now", "Plan A", "Plan B"].map((t, i) => `<button class="sk-opt" data-opt aria-pressed="${i === 0}" style="align-items:flex-start"><span class="sk-radio" style="margin-top:2px"></span><div style="flex:1" class="sk-stack">${tag(t)}${lines([50, 80])}</div><span class="sk-num" style="font-size:18px">-</span></button>`).join("")}</div>
+            <button class="sk-btn" data-ghost data-terms>See the full terms</button></div>`,
+          dock: `<div class="sk-dock"><button class="sk-btn" data-next>Continue</button></div>`,
+        });
+        return many(back(root, ctx, ["build", 0]), select(root),
+          K.on(root, "[data-terms]", "click", () => K.sheet(root, `${tag("Full terms")}${lines([90, 95, 80, 92, 60])}<button class="sk-btn" data-close>Close</button>`, { label: "Full terms" })),
+          K.on(root, "[data-next]", "click", () => ctx.toast("Next: payment details (not built in this template)")));
+      },
+    },
+  ]);
+
+  /* ------------------------------------------------------------------ 05 GARAGE */
+  Proto.versions("garage", [
+    {
+      name: "Bike passport",
+      axis: "After purchase, your bike gets a home: serial, warranty and the three things owners actually need, one tap away.",
+      personas: ["weekend", "racer"],
+      fixes: ["Warranty lives in an email nobody can find", "Nothing brings owners back after delivery"],
+      tryThis: ["Tap an action tile"],
+      motion: "Tiles press to 0.97. Nothing animates on a page you check in a hurry.",
+      tradeoff: "Needs serials and warranty data connected to accounts.",
+      render(root, ctx) {
+        frame(root, {
+          tabs: "garage",
+          body: `<div class="sk-pad sk-stack" style="padding-top:18px">${card(`${media({ ratio: "16/9", tag: "Your bike", glyph: "image" })}${lines([60, 40], { title: true })}<div class="sk-row">${tag("Warranty")}${tag("Serial")}</div>`)}
+            ${tag("Quick actions")}<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">${["Service", "Insure", "Transfer"].map((t) => `<button class="sk-card sk-press" data-act="${t}" style="align-items:center;padding:16px 8px"><span class="sk-av"></span><span style="font-weight:600;font-size:calc(var(--fs)*12.5px)">${t}</span></button>`).join("")}</div>
+            ${card(`${tag("Documents")}${lines([80, 65, 70])}`)}</div>`,
+        });
+        return K.on(root, "[data-act]", "click", (e, b) => b.dataset.act === "Service" ? ctx.go("garage", 1) : ctx.toast(`${b.dataset.act}: not built in this template`));
+      },
+    },
+    {
+      name: "Service log",
+      axis: "A timeline of everything done to the bike, with the next service suggested at the top.",
+      personas: ["weekend", "explorer"],
+      fixes: ["Owners forget when they last serviced", "Resale buyers can't see a bike's history"],
+      tryThis: ["Book the suggested service"],
+      motion: "None beyond the press. A log should feel steady.",
+      tradeoff: "Only as good as the data workshops enter.",
+      render(root, ctx) {
+        frame(root, {
+          tabs: "garage",
+          body: `<div class="sk-pad sk-stack" style="padding-top:18px">${card(`${tag("Next service")}${lines([70, 50], { title: true })}<button class="sk-btn" data-book>Book it</button>`)}
+            ${tag("History")}<div class="sk-tl">${[0, 1, 2, 3].map((i) => `<div ${i === 0 ? "data-on" : ""}>${card(lines([55, 80]))}</div>`).join("")}</div></div>`,
+        });
+        return K.on(root, "[data-book]", "click", () => ctx.toast("Service request sent (prototype)"));
+      },
+    },
+    {
+      name: "Ride stats",
+      axis: "Turn ownership into progress: distance, time and milestones, without pretending to be a training app.",
+      personas: ["racer", "explorer"],
+      fixes: ["Owners track rides elsewhere and never return", "No reason to open the app between rides"],
+      tryThis: ["Switch the period"],
+      motion: "Bars grow from the baseline over 300ms when the period changes.",
+      tradeoff: "Competes with dedicated ride trackers, so it should stay light.",
+      render(root, ctx) {
+        const bars = () => `<div style="display:flex;align-items:flex-end;gap:8px;height:140px" data-bars>${Array.from({ length: 7 }, () => `<span style="flex:1;border-radius:6px 6px 0 0;background:var(--sk-block-2);height:${20 + Math.round(Math.random() * 80)}%;transform-origin:bottom;transition:height 300ms var(--ease-out)"></span>`).join("")}</div>`;
+        frame(root, {
+          tabs: "garage",
+          body: `<div class="sk-pad sk-stack" style="padding-top:18px"><div class="sk-seg" data-group>${["Week", "Month", "Year"].map((t, i) => `<button data-opt data-period aria-pressed="${i === 0}">${t}</button>`).join("")}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${["Distance", "Time", "Climb", "Rides"].map((t) => card(`${tag(t)}<span class="sk-num">-</span>`)).join("")}</div>
+            ${card(`${tag("Chart")}${bars()}`)}</div>`,
+        });
+        return many(select(root), K.on(root, "[data-period]", "click", () => root.querySelectorAll("[data-bars] span").forEach((s) => { s.style.height = 20 + Math.round(Math.random() * 80) + "%"; })));
+      },
+    },
+  ]);
+
+  /* ------------------------------------------------------------------ 06 RIDES */
+  Proto.versions("rides", [
+    {
+      name: "Group rides",
+      axis: "Find a ride near you this week and join it in one tap; the brand hosts the community instead of renting it from social.",
+      personas: ["weekend", "first"],
+      fixes: ["Events are listed as news posts", "No way to say you're coming"],
+      tryThis: ["Join a ride, then leave it"],
+      motion: "The Join button swaps label and fill in 150ms; a toast confirms.",
+      tradeoff: "Needs local hosts, or the map is empty outside big cities.",
+      render(root, ctx) {
+        frame(root, {
+          tabs: "rides",
+          body: `<div class="sk-pad sk-stack" style="padding-top:16px">${media({ ratio: "16/10", tag: "Map", glyph: "map" })}
+            ${[0, 1, 2].map(() => card(`<div class="sk-row"><div style="flex:1">${lines([65, 45], { title: true })}</div><button class="sk-chip" data-join aria-pressed="false">Join</button></div>`)).join("")}</div>`,
+        });
+        return K.on(root, "[data-join]", "click", (e, b) => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); b.textContent = on ? "Going" : "Join"; ctx.toast(on ? "You're on the list" : "You've left this ride"); });
+      },
+    },
+    {
+      name: "Challenges",
+      axis: "Monthly challenges with a clear finish line, so riders have a reason to come back that isn't a sale.",
+      personas: ["racer", "explorer"],
+      fixes: ["Loyalty is a discount code", "Nothing celebrates riding itself"],
+      tryThis: ["Accept a challenge"],
+      motion: "The progress ring fills once on first view (600ms), then stays still.",
+      tradeoff: "Easy to tip into gamification for its own sake.",
+      render(root, ctx) {
+        frame(root, {
+          tabs: "rides",
+          body: `<div class="sk-pad sk-stack" style="padding-top:18px">${card(`<div class="sk-row"><svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="34" fill="none" stroke="var(--sk-block)" stroke-width="10"/><circle cx="42" cy="42" r="34" fill="none" stroke="var(--sk-accent)" stroke-width="10" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6" transform="rotate(-90 42 42)" data-ring style="transition:stroke-dashoffset 600ms var(--ease-out)"/></svg>${lines([70, 50], { title: true })}</div>`)}
+            ${tag("This month")}${[0, 1].map(() => card(`${media({ ratio: "16/7", glyph: "image" })}${lines([60, 80], { title: true })}<button class="sk-btn" data-ghost data-accept>Accept challenge</button>`)).join("")}</div>`,
+        });
+        requestAnimationFrame(() => requestAnimationFrame(() => { const r = root.querySelector("[data-ring]"); if (r) r.style.strokeDashoffset = ctx.reduced ? "75" : "75"; }));
+        return K.on(root, "[data-accept]", "click", (e, b) => { b.textContent = "Accepted"; b.removeAttribute("data-ghost"); ctx.toast("Challenge accepted"); });
+      },
+    },
+    {
+      name: "Stories",
+      axis: "Short vertical stories from riders and the workshop, tapped through like a deck, then a clear end.",
+      personas: ["explorer", "weekend"],
+      fixes: ["Brand video sits on another platform", "No sense of the people behind the bikes"],
+      tryThis: ["Tap the right side to move on", "Reach the end card"],
+      motion: "Progress segments fill as you tap; the end card fades in (200ms).",
+      tradeoff: "Video takes a team to keep fresh.",
+      render(root, ctx) {
+        let i = 0; const N = 4;
+        const draw = () => {
+          root.innerHTML = `${K.status()}<div style="position:absolute;inset:0;background:#111">
+            ${i < N ? `<div class="sk-media" data-bleed style="position:absolute;inset:0;border-radius:0" role="img" aria-label="Story ${i + 1}"><span class="sk-tag" style="top:84px">Story ${i + 1} of ${N}</span><span class="sk-glyph">${icon("play")}</span></div>` :
+            `<div style="position:absolute;inset:0;display:grid;place-items:center;padding:24px"><div class="sk-card" style="width:100%">${tag("End card")}${lines([70, 50], { title: true, xl: true })}<button class="sk-btn" data-again>Watch again</button></div></div>`}
+            <div class="sk-progress" style="position:absolute;top:56px;left:12px;right:12px;z-index:3">${Array.from({ length: N }, (_, k) => `<i ${k < i || (k === i && i < N) ? "data-done" : ""}></i>`).join("")}</div>
+            ${i < N ? `<button aria-label="Previous" data-prev style="position:absolute;left:0;top:0;bottom:0;width:33%;z-index:2"></button><button aria-label="Next" data-nx style="position:absolute;right:0;top:0;bottom:0;width:67%;z-index:2"></button>
+            <div style="position:absolute;left:16px;right:16px;bottom:120px;z-index:1" class="sk-stack">${lines([70, 50], { title: true })}</div>` : ""}
+          </div>${K.tabs("rides")}`;
+          root.querySelector(".sk-status").style.color = "#fff";
+        };
+        draw();
+        return many(K.on(root, "[data-nx]", "click", () => { i = Math.min(N, i + 1); draw(); }), K.on(root, "[data-prev]", "click", () => { i = Math.max(0, i - 1); draw(); }), K.on(root, "[data-again]", "click", () => { i = 0; draw(); }));
+      },
+    },
+  ]);
+})();
+</script>
+<script>/* ==========================================================================
+   FIRST-VISIT TOUR: Pitang Labs Design Engineering
+   ========================================================================== */
+(function () {
+  const KEY = "protokit:toured";
+  const store = {
+    get() { try { return localStorage.getItem(KEY); } catch { return null; } },
+    set() { try { localStorage.setItem(KEY, "1"); } catch {} },
+  };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const names = (id) => ((window.Proto && window.Proto.registry[id]) || []).map((v) => v.name);
+  const fine = () => { try { return matchMedia("(pointer: fine)").matches && innerWidth > 760; } catch { return true; } };
+  const list = (arr) => arr.length < 2 ? (arr[0] || "") : arr.slice(0, -1).join(", ") + " e " + arr[arr.length - 1];
+
+  const steps = [
+    {
+      target: () => document.querySelector(".flows"), place: "right",
+      title: "Navegue entre os fluxos",
+      body: () => `${(window.Proto && window.Proto.flows.length) || 6} seções mapeadas da experiência, da página inicial à comunidade. Selecione um fluxo para visualizá-lo no dispositivo.${fine() ? " As teclas <kbd>↑</kbd> e <kbd>↓</kbd> também funcionam." : ""}`,
+    },
+    {
+      target: () => document.querySelector(".proto-picker"), place: "top",
+      title: "Cada fluxo possui direções de design",
+      body: () => `Clique na barra inferior para alternar entre as direções exploradas. Na Home: ${esc(list(names("home")))}.${fine() ? " Ou use as teclas numéricas <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>." : ""}`,
+    },
+    {
+      target: () => document.querySelector(".notes"), place: "left",
+      title: "Racional técnico e decisões de produto",
+      body: () => `Para cada direção: a tese de exploração, personas atendidas, problemas resolvidos, o que testar na tela, princípios de movimento e tradeoffs. Clique em uma persona para inspecionar seus objetivos.`,
+    },
+  ];
+
+  let root, hole, card, i = 0, open = false, lastFocus = null;
+
+  function build() {
+    root = document.createElement("div");
+    root.className = "tour";
+    root.innerHTML = `<div class="tour-hole" aria-hidden="true"></div>
+      <section class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-t" aria-describedby="tour-b">
+        <p class="tour-k"></p><h2 class="tour-t" id="tour-t"></h2><p class="tour-b" id="tour-b"></p>
+        <div class="tour-f"><span class="tour-dots" aria-hidden="true">${steps.map(() => "<i></i>").join("")}</span>
+          <button type="button" class="tour-skip">Pular</button>
+          <button type="button" class="tour-back">Voltar</button>
+          <button type="button" class="tour-next">Próximo</button></div>
+      </section>`;
+    document.body.appendChild(root);
+    hole = root.querySelector(".tour-hole");
+    card = root.querySelector(".tour-card");
+    root.querySelector(".tour-skip").addEventListener("click", finish);
+    root.querySelector(".tour-back").addEventListener("click", () => go(i - 1));
+    root.querySelector(".tour-next").addEventListener("click", () => (i === steps.length - 1 ? finish() : go(i + 1)));
+    card.addEventListener("keydown", (e) => {
+      if (e.key !== "Tab") return;
+      const fs = [...card.querySelectorAll("button")].filter((b) => !b.hidden);
+      const a = fs[0], z = fs[fs.length - 1];
+      if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
+      else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+    });
+  }
+
+  function place() {
+    if (!open) return;
+    const st = steps[i], t = st.target();
+    const W = innerWidth, H = innerHeight, pad = 8, gap = 18, m = 12;
+    const narrow = W <= 760;
+    let r = t && t.getBoundingClientRect();
+    const visible = r && r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < H;
+    if (visible) {
+      const top = Math.max(m, r.top - pad), left = Math.max(m, r.left - pad);
+      const bottom = Math.min(H - m, r.bottom + pad), right = Math.min(W - m, r.right + pad);
+      hole.style.transform = `translate(${left}px, ${top}px)`;
+      hole.style.width = right - left + "px"; hole.style.height = bottom - top + "px";
+      hole.removeAttribute("data-off");
+    } else hole.setAttribute("data-off", "");
+    const cw = card.offsetWidth, ch = card.offsetHeight;
+    let x, y, side = st.place;
+    if (!visible || narrow) {
+      const low = visible && (r.top + r.height / 2) > H / 2;
+      x = (W - cw) / 2; y = low ? 20 : H - ch - 20; side = "none";
+    }
+    else if (side === "right") { x = r.right + pad + gap; y = r.top + 8; }
+    else if (side === "left") { x = r.left - pad - gap - cw; y = r.top + 8; }
+    else { x = r.left + r.width / 2 - cw / 2; y = r.top - pad - gap - ch; }
+    if (side === "right" && x + cw > W - m) { x = (W - cw) / 2; y = H - ch - 20; side = "none"; }
+    if (side === "left" && x < m) { x = (W - cw) / 2; y = H - ch - 20; side = "none"; }
+    x = Math.min(W - cw - m, Math.max(m, x)); y = Math.min(H - ch - m, Math.max(m, y));
+    card.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+    card.dataset.side = side;
+  }
+
+  function go(n) {
+    i = Math.max(0, Math.min(steps.length - 1, n));
+    const st = steps[i];
+    card.querySelector(".tour-k").textContent = `${i + 1} de ${steps.length}`;
+    card.querySelector(".tour-t").textContent = st.title;
+    card.querySelector(".tour-b").innerHTML = st.body();
+    card.querySelector(".tour-back").hidden = i === 0;
+    card.querySelector(".tour-next").textContent = i === steps.length - 1 ? "Entendido" : "Próximo";
+    card.querySelectorAll(".tour-dots i").forEach((d, j) => d.toggleAttribute("data-on", j === i));
+    card.removeAttribute("data-in");
+    place();
+    requestAnimationFrame(() => card.setAttribute("data-in", ""));
+    card.querySelector(".tour-next").focus({ preventScroll: true });
+  }
+
+  function start() {
+    if (!root) build();
+    lastFocus = document.activeElement;
+    open = true;
+    root.setAttribute("data-open", "");
+    window.addEventListener("resize", place);
+    go(0);
+  }
+
+  function finish() {
+    if (!open) return;
+    open = false;
+    root.removeAttribute("data-open");
+    window.removeEventListener("resize", place);
+    store.set();
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const btn = document.querySelector(".tour-again") || document.getElementById("btn-tour");
+    if (btn) btn.addEventListener("click", () => { start(); });
+    const p = new URLSearchParams(location.search);
+    if (p.get("tour") === "1" || (!store.get() && !navigator.webdriver && p.get("notour") !== "1")) {
+      setTimeout(start, 500);
+    }
+  });
+})();
+</script>
 </body>
 </html>

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prototype Viewer Template</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<style>
+/*__SHELL_CSS__*/
+/*__PICKER_CSS__*/
+/*__KIT_CSS__*/
+/*__SCREENS_CSS__*/
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail" aria-label="Flows">
+    <div class="brand">
+      <span class="brand-eyebrow">Prototype viewer · template</span>
+      <h1 class="brand-title">A bike brand, rethought</h1>
+      <span class="brand-sub">Pitang Labs · Protótipo interativo de engenharia de design.</span>
+    </div>
+    <ul class="flows"></ul>
+    <div class="controls">
+      <div class="ctl"><span class="ctl-label" id="l-device">Device</span><div class="seg" data-key="device" role="group" aria-labelledby="l-device"><button data-val="ios">iOS</button><button data-val="android">Android</button><button data-val="web">Web</button></div></div>
+      <div class="ctl"><span class="ctl-label" id="l-theme">Theme</span><div class="seg" data-key="theme" role="group" aria-labelledby="l-theme"><button data-val="light">Light</button><button data-val="dark">Dark</button></div></div>
+      <div class="ctl"><span class="ctl-label" id="l-text">Text size</span><div class="seg" data-key="text" role="group" aria-labelledby="l-text"><button data-val="default">Default</button><button data-val="large">Large</button></div></div>
+      <div class="ctl"><span class="ctl-label" id="l-annot">Labels</span><div class="seg" data-key="annot" role="group" aria-labelledby="l-annot"><button data-val="on">On</button><button data-val="off">Off</button></div></div>
+      <div class="ctl"><span class="ctl-label" id="l-motion">Motion</span><div class="seg" data-key="motion" role="group" aria-labelledby="l-motion"><button data-val="full">Full</button><button data-val="reduced">Reduced</button></div></div>
+      <button class="tour-again" type="button">Show me around</button>
+      <div class="keys"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> or <kbd>←</kbd> <kbd>→</kbd> versions · <kbd>↑</kbd> <kbd>↓</kbd> flows · <kbd>R</kbd> replay</div>
+    </div>
+  </aside>
+  <main class="stage">
+    <div class="stage-h" aria-live="polite"><div class="stage-flow"></div><div class="stage-ver"></div></div>
+    <div class="device-wrap"><div class="device"><div class="island" aria-hidden="true"></div><div class="ph" id="screen" data-theme="light"></div></div></div>
+  </main>
+  <aside class="notes" aria-label="Notes for this version"></aside>
+</div>
+<script>/*__KIT_JS__*/</script>
+<script>/*__SHELL_JS__*/</script>
+<script>/*__SCREENS_JS__*/</script>
+</body>
+</html>
