@@ -1,0 +1,28 @@
+# [NOME DO SEU PROJETO OU POC]
+# Este arquivo é um modelo para você especificar requisitos na IDE.
+# O simulador aceita Markdown, Histórias de Usuário, Gherkin BDD ou texto livre!
+
+## Categoria: 01. Acesso & Identificação
+### Fluxo: [Nome do Fluxo de Login ou Onboarding]
+- RN-01: [Descreva a regra de negócio de login, SSO, perfis ou segurança]
+- RN-02: [Outra regra de validação, bloqueio ou controle de sessão]
+
+## Categoria: 02. Entrada & Registro
+### Fluxo: [Nome do Fluxo de Formulário, Pedido ou Solicitação]
+- RN-03: [Descreva campos obrigatórios, upload de anexos ou regras de validação]
+- RN-04: [Descreva regras de cálculo ou regras de negócio específicas]
+
+## Categoria: 03. Triagem & Operação
+### Fluxo: [Nome da Mesa de Triagem, Kanban ou Atendimento]
+- RN-05: [Descreva regras de priorização, prazos ou regras de SLA]
+- RN-06: [Descreva regras de despacho, aprovação ou análise por IA]
+
+## Categoria: 04. Acompanhamento & Protocolo
+### Fluxo: [Nome da Consulta, Rastreamento ou Histórico]
+- RN-07: [Descreva regras de consulta por protocolo, chave ou documento]
+- RN-08: [Descreva regras de timeline, notificações ou certidões]
+
+## Categoria: 05. Gestão, Métricas & Governança
+### Fluxo: [Nome do Painel, Relatório ou Indicadores]
+- RN-09: [Descreva métricas obrigatórias, KPIs ou taxas de conversão]
+- RN-10: [Descreva regras de exportação de dados, LGPD ou conformidade]

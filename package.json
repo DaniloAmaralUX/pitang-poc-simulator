@@ -1,0 +1,25 @@
+{
+  "name": "pitang-poc-simulator",
+  "version": "1.0.0",
+  "description": "Simulador de POC em HTML com mapeamento de fluxos por categorias, regras de negócio e validação de usabilidade (Jakub Krehel & Pitang Labs)",
+  "private": false,
+  "license": "MIT",
+  "author": "Pitang Labs",
+  "scripts": {
+    "build": "python scripts/build.py",
+    "simulate": "python scripts/simulate.py",
+    "serve": "python scripts/serve.py",
+    "start": "python scripts/serve.py 3000",
+    "test": "node scripts/test.mjs"
+  },
+  "keywords": [
+    "pitang-labs",
+    "poc-simulator",
+    "prototype-viewer",
+    "design-engineering",
+    "jakub-krehel",
+    "usability",
+    "wcag-aa",
+    "html-prototype"
+  ]
+}
