@@ -35,18 +35,24 @@
 
   /* Concentric Radii Tokens (R_outer = R_inner + padding) */
   --r-inner: 8px;
-  --r-card: 16px;       /* 8px inner + 8px padding */
-  --r-sheet: 24px;      /* 16px inner + 8px padding */
+  --r-subcard: 16px;    /* 8px inner + 8px padding */
+  --r-card: 24px;       /* 8px inner + 16px padding */
+  --r-sheet: 32px;      /* 16px inner + 16px padding */
   --r-pill: 9999px;
 
   /* Layered Depth & Elevation */
-  --sk-sh-1: 0 1px 2px 0 rgba(10, 13, 20, 0.05), 0 1px 3px 0 rgba(10, 13, 20, 0.04);
-  --sk-sh-2: 0 4px 6px -1px rgba(10, 13, 20, 0.07), 0 2px 4px -2px rgba(10, 13, 20, 0.04);
-  --sk-sh-card: 0 1px 3px 0 rgba(10, 13, 20, 0.05), 0 6px 16px -4px rgba(10, 13, 20, 0.07);
+  --sk-sh-1: 0 1px 2px 0 rgba(10, 13, 20, 0.04), 0 1px 3px 0 rgba(10, 13, 20, 0.03);
+  --sk-sh-2: 0 4px 6px -1px rgba(10, 13, 20, 0.06), 0 2px 4px -2px rgba(10, 13, 20, 0.03);
+  --sk-sh-card: 0 1px 2px rgba(10, 13, 20, 0.04), 0 4px 12px rgba(10, 13, 20, 0.06);
 
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --fs: 1;
+
+  /* Unitless typography scale */
+  --lh-display: 1.1;
+  --lh-heading: 1.25;
+  --lh-body: 1.5;
 
   position: relative;
   width: 390px;
@@ -771,64 +777,284 @@
 /* ------------------------------------------------------------------
    PLATFORM ADAPTATIONS (iOS, Android Material 3, Web Desktop)
    ------------------------------------------------------------------ */
-/* Android (Material 3): Pill indicator, 48px hit areas */
-.ph[data-device="android"] { width: 412px; height: 915px; }
-.ph[data-device="android"] .sk-status { height: 36px; padding: 2px 22px 0 26px; }
-.ph[data-device="android"] .sk-bar { padding-top: 36px; height: 92px; }
-.ph[data-device="android"] .sk-scroll { top: 92px; }
+/* iOS: Apple Human Interface Guidelines */
+.ph[data-device="ios"] {
+  width: 390px;
+  height: 844px;
+}
+.ph[data-device="ios"] .sk-status {
+  height: 47px;
+  padding: 12px 28px 0 32px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.ph[data-device="ios"] .sk-bar {
+  padding-top: 47px;
+  height: 96px;
+}
+.ph[data-device="ios"] .sk-scroll {
+  top: 96px;
+  padding-bottom: 96px;
+}
+.ph[data-device="ios"] .sk-tabs {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 84px;
+  padding: 8px 12px 30px;
+  background: rgba(255, 255, 255, 0.88);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  backdrop-filter: blur(20px) saturate(1.8);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.08);
+  border-radius: 0;
+  z-index: 25;
+}
+.ph[data-theme="dark"][data-device="ios"] .sk-tabs {
+  background: rgba(18, 21, 29, 0.85);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.ph[data-device="ios"] .sk-tab {
+  flex-direction: column;
+  gap: 2px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 550;
+  color: var(--sk-ink-3);
+}
+.ph[data-device="ios"] .sk-tab .sk-tab-ic {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+}
+.ph[data-device="ios"] .sk-tab[aria-current="page"] {
+  color: var(--brand-pitang);
+  font-weight: 650;
+  background: none;
+}
+.ph[data-device="ios"] .sk-home {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 134px;
+  height: 5px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 35;
+}
+.ph[data-device="ios"] .sk-card {
+  border-radius: 16px;
+}
+
+/* Android (Material 3): Tonal navigation bar, Pill indicator, FAB */
+.ph[data-device="android"] {
+  width: 412px;
+  height: 915px;
+}
+.ph[data-device="android"] .sk-status {
+  height: 36px;
+  padding: 4px 22px 0 24px;
+  font-size: 13px;
+  font-weight: 550;
+}
+.ph[data-device="android"] .sk-bar {
+  padding-top: 36px;
+  height: 90px;
+}
+.ph[data-device="android"] .sk-scroll {
+  top: 90px;
+  padding-bottom: 96px;
+}
 .ph[data-device="android"] .sk-tabs {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 96px;
-  padding: 10px 6px 26px;
+  height: 80px;
+  padding: 10px 16px 18px;
+  background: var(--sk-surface);
+  border-top: 1px solid var(--sk-line);
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.04);
   border-radius: 0;
-  box-shadow: 0 -1px 0 var(--sk-line);
+  z-index: 25;
 }
-.ph[data-device="android"] .sk-tab { border-radius: 0; }
-.ph[data-device="android"] .sk-tab[aria-current="page"] { background: none; }
+.ph[data-device="android"] .sk-tab {
+  flex-direction: column;
+  border-radius: 0;
+  gap: 4px;
+  color: var(--sk-ink-3);
+}
+.ph[data-device="android"] .sk-tab .sk-tab-ic {
+  width: 56px;
+  height: 28px;
+  border-radius: 9999px;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  transition: background-color 150ms ease-out;
+}
 .ph[data-device="android"] .sk-tab[aria-current="page"] .sk-tab-ic {
-  box-shadow: 0 0 0 6px var(--brand-surface), -14px 0 0 6px var(--brand-surface), 14px 0 0 6px var(--brand-surface);
-  background: var(--brand-pitang);
+  background: var(--brand-surface);
+  color: var(--brand-pitang);
 }
-.ph[data-device="android"] .sk-btn { border-radius: 9999px; height: 48px; }
-.ph[data-device="android"] .sk-card { border-radius: 12px; }
+.ph[data-device="android"] .sk-tab[aria-current="page"] {
+  color: var(--brand-pitang);
+  font-weight: 700;
+  background: none;
+}
+.ph[data-device="android"] .sk-home {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 4px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 35;
+}
+.ph[data-device="android"] .sk-btn {
+  border-radius: 9999px;
+  height: 48px;
+}
+.ph[data-device="android"] .sk-card {
+  border-radius: 16px;
+}
 
-/* Web Desktop (Responsive Browser Frame) */
-.ph[data-device="web"] { width: 1280px; height: 780px; }
-.ph[data-device="web"] .sk-status, .ph[data-device="web"] .sk-home { display: none; }
-.ph[data-device="web"] .sk-bar { padding: 0 32px; height: 64px; }
-.ph[data-device="web"] .sk-scroll { top: 64px; padding-bottom: 48px; }
-.ph[data-device="web"] .sk-scroll > * { max-width: 820px; margin-left: auto; margin-right: auto; }
+/* Material 3 Floating Action Button (FAB) */
+.sk-fab {
+  position: absolute;
+  right: 20px;
+  bottom: 96px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--brand-pitang);
+  color: #FFFFFF;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(237, 28, 36, 0.35);
+  z-index: 24;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 150ms var(--ease-out), background-color 150ms ease-out;
+}
+.sk-fab:active { transform: scale(0.96); }
+.sk-fab svg { width: 24px; height: 24px; }
+.ph:not([data-device="android"]) .sk-fab { display: none; }
+
+/* Web Desktop: Enterprise Browser Viewport (1280x780px canvas) */
+.ph[data-device="web"] {
+  width: 1280px;
+  height: 780px;
+}
+.ph[data-device="web"] .sk-status,
+.ph[data-device="web"] .sk-home {
+  display: none;
+}
+.ph[data-device="web"] .sk-bar {
+  padding: 0 32px;
+  height: 60px;
+  box-shadow: 0 1px 0 var(--sk-line);
+}
+.ph[data-device="web"] .sk-scroll {
+  top: 60px;
+  padding: 24px 32px 64px;
+  scrollbar-width: thin;
+}
+.ph[data-device="web"] .sk-scroll::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+}
+.ph[data-device="web"] .sk-scroll::-webkit-scrollbar-thumb {
+  background: var(--sk-line-2);
+  border-radius: 3px;
+}
+.ph[data-device="web"] .sk-scroll > * {
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Multi-column Kanban Grid on Web */
+.ph[data-device="web"] .sk-kanban-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  overflow-x: visible;
+}
+.ph[data-device="web"] .sk-kanban-col {
+  flex: none;
+  min-width: 0;
+  padding: 14px;
+}
+
+/* 4-column KPI Cards on Web */
+.ph[data-device="web"] .sk-kpi-grid {
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 16px;
+}
+
+/* 2-column Form Grid on Web */
+.ph[data-device="web"] .sk-form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.ph[data-device="web"] .sk-form-grid-2col .sk-span-2 {
+  grid-column: span 2;
+}
+
+/* Full-width Desktop Data Table */
+.ph[data-device="web"] .sk-data-table {
+  font-size: 13.5px;
+}
+.ph[data-device="web"] .sk-data-table th {
+  padding: 12px 14px;
+  font-size: 11.5px;
+  background: var(--sk-surface-2);
+}
+.ph[data-device="web"] .sk-data-table td {
+  padding: 14px 14px;
+}
+
+/* Desktop Navigation Header Bar */
 .ph[data-device="web"] .sk-tabs {
   top: 0;
   bottom: auto;
   left: 50%;
   right: auto;
   transform: translateX(-50%);
-  width: 580px;
-  height: 64px;
+  width: 600px;
+  height: 60px;
   padding: 0;
   border-radius: 0;
   background: none;
   box-shadow: none;
-  z-index: 21;
+  z-index: 22;
   display: flex;
 }
 .ph[data-device="web"] .sk-tab {
   flex: 1;
   flex-direction: row;
   border-radius: 0;
-  font-size: calc(var(--fs) * 13.5px);
+  font-size: 13.5px;
+  font-weight: 600;
   box-shadow: inset 0 -2px 0 transparent;
-  gap: 8px;
+  gap: 6px;
 }
 .ph[data-device="web"] .sk-tab .sk-tab-ic { display: none; }
 .ph[data-device="web"] .sk-tab[aria-current="page"] {
   background: none;
-  box-shadow: inset 0 -2px 0 var(--brand-pitang);
+  box-shadow: inset 0 -2.5px 0 var(--brand-pitang);
   color: var(--brand-pitang);
 }
+
 .ph[data-device="web"] .sk-sheet {
   left: calc(50% - 280px);
   right: auto;

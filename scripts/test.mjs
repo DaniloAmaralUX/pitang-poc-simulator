@@ -41,6 +41,10 @@ if (fs.existsSync(distFile)) {
   assert("Contém regras Jakub: scale-on-press 0.96", content.includes("scale(0.96)"));
   assert("Contém números tabulares (tabular-nums)", content.includes("tabular-nums"));
   assert("Contém raios concêntricos definidos", content.includes("--r-card") && content.includes("--r-inner"));
+  assert("Contém raios concêntricos expandidos (subcard, sheet, pill)", content.includes("--r-subcard") && content.includes("--r-sheet"));
+  assert("Contém breakpoints de dispositivos (iOS, Android, Web)", content.includes('data-device="ios"') && content.includes('data-device="android"') && content.includes('data-device="web"'));
+  assert("Contém picker Emil Kowalski com sliding highlight", content.includes("proto-picker-highlight") && content.includes("proto-picker-replay"));
+  assert("Contém atalhos de teclado (D para dispositivo, T para tema, R para replay)", content.includes("setDevice") && content.includes("setTheme"));
   assert("Contém tags de acessibilidade (role, aria-label, aria-pressed)", content.includes('role="group"') && content.includes("aria-label"));
   assert("Contém gaveta de requisitos (req-drawer)", content.includes("req-drawer"));
   assert("Contém motor de parser embutido", content.includes("RequirementsParser"));

@@ -131,6 +131,13 @@
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
         setFlow((state.flow - 1 + currentProject.flows.length) % currentProject.flows.length, 0);
+      } else if (e.key === "d" || e.key === "D") {
+        const devList = ["ios", "android", "web"];
+        const curIdx = devList.indexOf(state.device);
+        const nextDev = devList[(curIdx + 1) % devList.length];
+        setDevice(nextDev);
+      } else if (e.key === "t" || e.key === "T") {
+        setTheme(state.theme === "light" ? "dark" : "light");
       } else if (e.key === "r" || e.key === "R") {
         mountScreen();
       }
@@ -376,11 +383,9 @@
     const highlight = picker.querySelector(".proto-picker-highlight");
     if (!activeBtn || !highlight) return;
 
-    const r = activeBtn.getBoundingClientRect();
-    const pr = picker.getBoundingClientRect();
-    highlight.style.transform = `translateX(${r.left - pr.left}px)`;
-    highlight.style.width = `${r.width}px`;
-    picker.setAttribute("data-ready", "");
+    highlight.style.width = activeBtn.offsetWidth + "px";
+    highlight.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
+    requestAnimationFrame(() => picker.setAttribute("data-ready", ""));
   }
 
   /* ---- Mount Screen in Device Stage ---- */
@@ -424,6 +429,50 @@
     } catch (err) {
       console.error("Screen render error:", err);
       screen.innerHTML = `<div style="padding:30px;color:#ED1C24"><h3>Erro ao renderizar tela</h3><pre>${esc(err.message)}</pre></div>`;
+    }
+
+    // Platform-specific status bar time & desktop breadcrumbs
+    const statusTime = screen.querySelector(".sk-status-time");
+    if (statusTime) {
+      statusTime.textContent = state.device === "android" ? "10:00" : "09:41";
+    }
+
+    // Web Desktop enterprise header adaptation
+    if (state.device === "web") {
+      const barEl = screen.querySelector(".sk-bar");
+      if (barEl) {
+        const curCat = currentFlow.category || "Ouvidoria";
+        barEl.innerHTML = `
+          <div class="sk-row" style="gap:14px;align-items:center">
+            <span class="sk-logo-wrap" aria-label="Pitang Labs">${window.Kit.pitangMiniLogo ? window.Kit.pitangMiniLogo() : ''}</span>
+            <div class="sk-breadcrumbs" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sk-ink-3)">
+              <span style="opacity:0.6">Portal</span>
+              <span style="opacity:0.4">/</span>
+              <span style="opacity:0.6">${esc(curCat)}</span>
+              <span style="opacity:0.4">/</span>
+              <strong style="color:var(--sk-ink);font-weight:650">${esc(currentFlow.title)}</strong>
+            </div>
+          </div>
+          <span class="sk-sp"></span>
+          <div class="sk-row" style="gap:10px;align-items:center">
+            <div class="sk-web-search-box" style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:var(--sk-surface-2);border-radius:6px;border:1px solid var(--sk-line);font-size:12px;color:var(--sk-ink-3);cursor:pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <span>Buscar...</span>
+              <kbd style="font-size:10px;padding:1px 4px;border-radius:3px;background:var(--sk-surface);border:1px solid var(--sk-line)">⌘K</kbd>
+            </div>
+            <button class="sk-ic sk-press" aria-label="Notificações"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+            <div class="sk-avatar" style="background:#ED1C24;color:#fff;font-weight:700;font-size:11px" title="Pitang Colaborador">PL</div>
+          </div>
+        `;
+      }
+    }
+
+    // Android FAB quick action trigger
+    const mainFab = screen.querySelector("#sk-main-fab");
+    if (mainFab) {
+      mainFab.addEventListener("click", () => {
+        window.Kit.toast(screen, "Nova demanda iniciada (Ação rápida Material 3)");
+      });
     }
 
     // Attach Jakub live inspector badge if enabled
@@ -592,6 +641,45 @@
     deviceWrap.style.height = `${Math.round(d.h * s)}px`;
     device.style.transform = `scale(${s})`;
     device.dataset.device = state.device;
+  }
+
+  function setDevice(dev) {
+    if (!DEVICES[dev]) return;
+    state.device = dev;
+    store.set("device", dev);
+    const seg = document.querySelector('.seg[data-key="device"]');
+    if (seg) {
+      const btns = seg.querySelectorAll("button");
+      btns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.val === dev)));
+      const active = [...btns].find((b) => b.dataset.val === dev);
+      const thumb = seg.querySelector(".seg-thumb");
+      if (active && thumb) {
+        thumb.style.transform = `translateX(${active.offsetLeft - 2}px)`;
+        thumb.style.width = `${active.offsetWidth}px`;
+      }
+    }
+    device.dataset.device = state.device;
+    fitStage();
+    updateUrlParams();
+    mountScreen();
+  }
+
+  function setTheme(t) {
+    state.theme = t;
+    store.set("theme", t);
+    document.documentElement.dataset.theme = t;
+    if (screen) screen.dataset.theme = t;
+    const seg = document.querySelector('.seg[data-key="theme"]');
+    if (seg) {
+      const btns = seg.querySelectorAll("button");
+      btns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.val === t)));
+      const active = [...btns].find((b) => b.dataset.val === t);
+      const thumb = seg.querySelector(".seg-thumb");
+      if (active && thumb) {
+        thumb.style.transform = `translateX(${active.offsetLeft - 2}px)`;
+        thumb.style.width = `${active.offsetWidth}px`;
+      }
+    }
   }
 
   /* ---- Segmented Controls (Device, Theme, Motion) ---- */

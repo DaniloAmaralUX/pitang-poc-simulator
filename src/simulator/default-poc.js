@@ -28,6 +28,7 @@
         id: "acesso-seguro",
         title: "Acesso & Identificação Institucional",
         category: "01. Acesso & Autenticação",
+        archetype: "auth",
         sum: "Identificação unificada com Gov.br, SSO corporativo e protocolo anônimo.",
         rules: [
           "RN-01: Autenticação via Gov.br (Prata/Ouro) e SSO corporativo com chave SAML 2.0 / OAuth2",
@@ -43,6 +44,7 @@
         id: "nova-manifestacao",
         title: "Nova Manifestação & Registro de Ocorrência",
         category: "02. Entrada & Registro",
+        archetype: "form",
         sum: "Formulário inteligente com triagem preditiva, upload validado e geração de protocolo.",
         rules: [
           "RN-04: Classificação automatizada do tipo (Denúncia, Reclamação, Elogio, Sugestão) por IA",
@@ -58,6 +60,7 @@
         id: "mesa-triagem",
         title: "Mesa de Triagem & Fila Operacional",
         category: "03. Triagem & Operação",
+        archetype: "kanban",
         sum: "Cockpit do analista com kanban de SLA, sugestão de parecer por IA e despacho rápido.",
         rules: [
           "RN-07: Priorização automática por criticidade de SLA (Alta &lt; 4h, Média &lt; 24h, Baixa &lt; 72h)",
@@ -73,6 +76,7 @@
         id: "acompanhamento-protocolo",
         title: "Consulta Pública & Linha do Tempo",
         category: "04. Acompanhamento & Protocolo",
+        archetype: "timeline",
         sum: "Rastreamento em tempo real com linha do tempo de despachos e canal de interação.",
         rules: [
           "RN-10: Consulta pública por número de protocolo no formato PIT-2026-XXXXXX",
@@ -88,6 +92,7 @@
         id: "dashboard-governanca",
         title: "Dashboard Executivo & Telemetria",
         category: "05. Gestão, Métricas & Governança",
+        archetype: "dashboard",
         sum: "Indicadores em tempo real, resolutividade por diretoria e alertas de conformidade.",
         rules: [
           "RN-13: Apresentação de KPIs com números tabulares e comparativo temporal mensal",

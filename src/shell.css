@@ -382,6 +382,7 @@ kbd {
   align-items: center;
   padding: 20px 16px 0;
   background: var(--bg);
+  overflow: hidden;
 }
 .stage-h {
   text-align: center;
@@ -403,6 +404,7 @@ kbd {
   position: relative;
   flex: none;
   margin-top: 8px;
+  transition: width 240ms var(--ease-out), height 240ms var(--ease-out);
 }
 .device {
   position: absolute;
@@ -415,11 +417,14 @@ kbd {
   background: #0B0B0C;
   box-shadow: 0 0 0 1.5px #3A3B3D, 0 0 0 3px #0B0B0C, 0 40px 80px -24px rgba(0, 0, 0, 0.45), 0 12px 24px -12px rgba(0, 0, 0, 0.3);
   transform-origin: top left;
+  transition: border-radius 240ms var(--ease-out), background-color 240ms var(--ease-out), box-shadow 240ms var(--ease-out);
 }
 .device .ph {
   border-radius: 54px;
   clip-path: inset(0 round 54px);
 }
+
+/* iOS Dynamic Island with realistic sensor & camera reflections */
 .island {
   position: absolute;
   z-index: 100;
@@ -431,40 +436,124 @@ kbd {
   border-radius: 20px;
   background: #000;
   pointer-events: none;
+  transition: all 240ms var(--ease-out);
+}
+.device[data-device="ios"] .island::before {
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: 12px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #1e2c46 0%, #0d131f 65%, #000 100%);
+  box-shadow: inset 0 0 1px rgba(255, 255, 255, 0.4);
+}
+.device[data-device="ios"] .island::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 14px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #090909;
 }
 
-/* Android frame */
-.device[data-device="android"] { width: 436px; height: 939px; border-radius: 44px; }
-.device[data-device="android"] .ph { width: 412px; height: 915px; border-radius: 32px; clip-path: inset(0 round 32px); }
-.device[data-device="android"] .island { top: 24px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; }
+/* Android frame: Pixel 8 (412x915px) */
+.device[data-device="android"] {
+  width: 436px;
+  height: 939px;
+  border-radius: 44px;
+  padding: 12px;
+  background: #14161C;
+  box-shadow: 0 0 0 1.5px #3A3E4B, 0 0 0 3px #14161C, 0 40px 80px -24px rgba(0, 0, 0, 0.45);
+}
+.device[data-device="android"] .ph {
+  width: 412px;
+  height: 915px;
+  border-radius: 32px;
+  clip-path: inset(0 round 32px);
+}
+.device[data-device="android"] .island {
+  top: 18px;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: #000;
+  box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.35);
+}
+.device[data-device="android"] .island::before,
+.device[data-device="android"] .island::after {
+  display: none;
+}
 
-/* Web Desktop frame */
+/* Web Desktop frame: macOS Browser Window (1280x780px canvas) */
 .device[data-device="web"] {
   width: 1280px;
   height: 820px;
   padding: 40px 0 0;
   border-radius: 12px;
-  background: #DCDCD8;
+  background: #E8E8E6;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12), 0 40px 80px -24px rgba(0, 0, 0, 0.4), 0 12px 24px -12px rgba(0, 0, 0, 0.25);
+}
+:root[data-theme="dark"] .device[data-device="web"] {
+  background: #1B1E28;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 40px 80px -24px rgba(0, 0, 0, 0.7);
 }
 .device[data-device="web"]::before {
   content: "";
   position: absolute;
-  top: 15px;
+  top: 14px;
   left: 18px;
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #EF6A5E;
-  box-shadow: 18px 0 0 #F4BE4F, 36px 0 0 #61C454;
+  box-shadow: 20px 0 0 #F4BE4F, 40px 0 0 #61C454;
+  z-index: 101;
 }
 .device[data-device="web"] .island {
-  top: 8px;
-  width: 440px;
-  height: 24px;
-  margin-left: -220px;
-  border-radius: 7px;
-  background: #F6F6F4;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-left: 0;
+  width: 540px;
+  height: 26px;
+  border-radius: 6px;
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 11.5px;
+  color: #555E6D;
+  pointer-events: none;
+}
+:root[data-theme="dark"] .device[data-device="web"] .island {
+  background: #12151D;
+  color: #9BA4B5;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.device[data-device="web"] .island::before {
+  content: "🔒 https://portal.pitang.com/poc/ouvidoria-geral";
+  font-variant-numeric: tabular-nums;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: none;
+  box-shadow: none;
+  width: auto;
+  height: auto;
+  position: static;
+  color: inherit;
+}
+.device[data-device="web"] .island::after {
+  display: none;
 }
 .device[data-device="web"] .ph {
   width: 1280px;
@@ -774,16 +863,61 @@ kbd {
 }
 .btn-export-html:hover { background: var(--tint-2); }
 
-/* Responsive adjustments */
-@media (max-width: 1100px) {
-  .app { grid-template-columns: 280px 1fr; }
-  .notes { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); padding: 24px 28px 120px; }
-  .app { height: auto; }
-  .rail { position: sticky; top: 0; height: 100dvh; }
+/* Responsive adjustments for Workbench Breakpoints */
+@media (max-width: 1180px) {
+  .app {
+    grid-template-columns: 280px 1fr;
+    height: auto;
+    min-height: 100dvh;
+  }
+  .rail {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    padding: 18px 16px;
+  }
+  .stage {
+    min-height: calc(100dvh - 40px);
+    padding: 16px 12px 30px;
+  }
+  .notes {
+    grid-column: 1 / -1;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 24px 28px 120px;
+    max-height: none;
+    overflow-y: visible;
+  }
 }
+
 @media (max-width: 760px) {
-  .app { display: block; }
-  .rail { position: static; height: auto; padding: 18px 16px; border-right: 0; border-bottom: 1px solid var(--line); }
-  .flows-container { max-height: 240px; }
-  .notes { padding: 20px 16px 120px; }
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100dvh;
+  }
+  .rail {
+    position: static;
+    height: auto;
+    padding: 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .flows-container {
+    max-height: 200px;
+  }
+  .stage {
+    padding: 14px 8px 40px;
+    overflow-x: hidden;
+  }
+  .stage-ver {
+    font-size: 20px;
+  }
+  .notes {
+    padding: 20px 16px 100px;
+  }
+  .req-drawer {
+    width: 100vw;
+  }
 }

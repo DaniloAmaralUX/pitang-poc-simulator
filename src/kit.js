@@ -40,7 +40,7 @@
 
   const status = () => `
     <div class="sk-status" aria-hidden="true">
-      <span class="sk-tabnum">09:41</span>
+      <span class="sk-tabnum sk-status-time">09:41</span>
       <div class="sk-status-icons">
         <span class="sk-signal"></span>
         <span class="sk-wifi"></span>
@@ -49,7 +49,7 @@
     </div>
   `;
 
-  // Top Bar with Pitang logo + Title + Action icons
+  // Top Bar with Pitang logo + Title + Action icons (Desktop breadcrumbs when on Web)
   function bar(o = {}) {
     const left = o.back
       ? `<button class="sk-ic sk-press" data-back aria-label="Voltar">${icon("back")}</button>`
@@ -74,12 +74,13 @@
       <nav class="sk-tabs" aria-label="Navegação Principal do Sistema">
         ${items.map(([id, label]) => `
           <button class="sk-tab sk-press" data-tab-flow="${id}" ${id === activeFlowId ? 'aria-current="page"' : ""}>
-            <i class="sk-tab-ic" aria-hidden="true"></i>
+            <i class="sk-tab-ic" aria-hidden="true">${icon("bolt")}</i>
             <span class="sk-tab-label">${esc(label)}</span>
           </button>
         `).join("")}
       </nav>
       <span class="sk-home" aria-hidden="true"></span>
+      <button class="sk-fab sk-press" id="sk-main-fab" aria-label="Ação rápida / Nova demanda">${icon("plus")}</button>
     `;
   }
 

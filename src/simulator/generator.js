@@ -2,7 +2,8 @@
    PITANG LABS · POC GENERATOR ENGINE (ENHANCED V2)
    Generates rich, fully interactive screens across 8 UI Archetypes
    (Form, Table, Kanban, Dashboard, Timeline, Auth, Copilot, Approval)
-   strictly adhering to Jakub Krehel's Design Engineering standards.
+   strictly adhering to Emil Kowalski's prototype craftsmanship and
+   Jakub Krehel's Design Engineering standards.
    ========================================================================== */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) {
@@ -95,10 +96,21 @@
     return [v1, v2, v3];
   }
 
+  function resolveArchetype(flow) {
+    if (flow.archetype) return flow.archetype;
+    const combined = `${flow.id} ${flow.title} ${flow.sum} ${(flow.rules || []).join(" ")}`.toLowerCase();
+    if (/auth|login|acesso|identificacao|gov\.br|sso|autenticacao/i.test(combined)) return "auth";
+    if (/kanban|fila|esteira|mesa|triagem|operacao/i.test(combined)) return "kanban";
+    if (/dashboard|metrica|kpi|telemetria|governanca|painel/i.test(combined)) return "dashboard";
+    if (/tabela|diretorio|pesquisa|relatorio|busca|consulta publica|registros/i.test(combined)) return "table";
+    if (/linha do tempo|timeline|rastreamento|tramite|historico|protocolo/i.test(combined)) return "timeline";
+    if (/copilot|ia|assistente|rag|minuta/i.test(combined)) return "copilot";
+    if (/aprovacao|alcada|orcamento|pedido/i.test(combined)) return "approval";
+    return "form";
+  }
+
   function renderArchetypeScreen(root, ctx, flow, dirNumber, project) {
-    const K = window.Kit;
-    const { esc, bar, tabs } = K;
-    const archetype = flow.archetype || "form";
+    const archetype = resolveArchetype(flow);
 
     if (archetype === "auth") {
       return renderAuthArchetype(root, ctx, flow, dirNumber);
@@ -143,19 +155,23 @@
               Entrar com gov.br (Prata/Ouro)
             </button>
             <div class="sk-divider-text"><span>ou credencial institucional</span></div>
-            <div class="sk-field">
-              <label class="sk-label" for="inp-email">E-mail corporativo ou CPF</label>
-              <input class="sk-input" id="inp-email" type="text" placeholder="ex: usuario@pitang.com ou CPF" value="colaborador@pitang.com" autocomplete="off" />
+            <div class="sk-form-grid-2col">
+              <div class="sk-field sk-span-2">
+                <label class="sk-label" for="inp-email">E-mail corporativo ou CPF</label>
+                <input class="sk-input" id="inp-email" type="text" placeholder="ex: usuario@pitang.com ou CPF" value="colaborador@pitang.com" autocomplete="off" />
+              </div>
+              <div class="sk-field sk-span-2">
+                <label class="sk-label" for="inp-pass">Senha de acesso</label>
+                <input class="sk-input" id="inp-pass" type="password" value="••••••••••••" autocomplete="off" />
+              </div>
+              <div class="sk-span-2">
+                <button class="sk-btn sk-btn-primary" id="btn-login" style="margin-top:6px">Acessar Sistema</button>
+              </div>
             </div>
-            <div class="sk-field">
-              <label class="sk-label" for="inp-pass">Senha de acesso</label>
-              <input class="sk-input" id="inp-pass" type="password" value="••••••••••••" autocomplete="off" />
-            </div>
-            <button class="sk-btn sk-btn-primary" id="btn-login" style="margin-top:6px">Acessar Sistema</button>
           </div>
 
           <div class="sk-card">
-            <div class="sk-row" style="justify-content:space-between">
+            <div class="sk-row" style="justify-content:space-between;align-items:center">
               <div>
                 <div class="sk-rule-badge"><span>RN-02</span> Sigilo &amp; Criptografia</div>
                 <strong style="display:block;font-size:14px;color:var(--sk-ink);margin-top:2px">Acesso Anônimo Seguro</strong>
@@ -179,45 +195,98 @@
   }
 
   /* ------------------------------------------------------------------
-     ARCHETYPE: FORM / ENTRY & UPLOAD
+     ARCHETYPE: FORM / ENTRY & UPLOAD (Step Wizard in Dir 2)
      ------------------------------------------------------------------ */
   function renderFormArchetype(root, ctx, flow, dir) {
     const K = window.Kit;
     const { esc, bar, tabs } = K;
+    let step = 1;
 
-    const isWizard = dir === 2;
+    function renderView() {
+      const isWizard = dir === 2;
+      let formContentHtml = "";
 
-    root.innerHTML = `
-      ${bar({ title: flow.title, back: true })}
-      <div class="sk-scroll">
-        <div class="sk-pad sk-stack" style="padding-top:16px">
-          <div class="sk-row" style="justify-content:space-between;align-items:center">
-            <div>
-              <span class="sk-pill-tag">${esc(flow.category)}</span>
-              <h2 class="sk-h2">${esc(flow.title)}</h2>
-            </div>
-            <span class="sk-metric-pill">SLA Estimado: <strong class="sk-tabnum">24h</strong></span>
-          </div>
-
-          ${isWizard ? `
-            <div class="sk-stepper">
-              <div class="sk-step sk-step-done"><span class="sk-tabnum">1</span> Dados</div>
-              <div class="sk-step sk-step-active"><span class="sk-tabnum">2</span> Evidências</div>
-              <div class="sk-step"><span class="sk-tabnum">3</span> Revisão</div>
-            </div>
-            <div class="sk-ai-box" style="margin-top:2px">
-              <div class="sk-row" style="gap:6px;align-items:center">
-                <span class="sk-ai-sparkle">✦</span>
-                <strong style="font-size:13px">Assistente Pitang de Preenchimento</strong>
+      if (isWizard) {
+        if (step === 1) {
+          formContentHtml = `
+            <div class="sk-rule-badge"><span>RN-01</span> Validação Preliminar dos Dados</div>
+            <div class="sk-form-grid-2col">
+              <div class="sk-field">
+                <label class="sk-label" for="inp-titulo">Título / Assunto da Solicitação</label>
+                <input class="sk-input" id="inp-titulo" type="text" value="Solicitação de Análise e Parecer Técnico" />
               </div>
-              <p style="font-size:12.5px;color:var(--sk-ink-2);margin:4px 0 0">
-                Campos pré-preenchidos a partir do histórico anterior. Verifique os dados abaixo.
-              </p>
+              <div class="sk-field">
+                <label class="sk-label" for="sel-cat">Categoria da Demanda</label>
+                <select class="sk-select" id="sel-cat">
+                  <option value="1">Operacional / Processos</option>
+                  <option value="2">Infraestrutura &amp; Tecnologia</option>
+                  <option value="3">Conformidade Legal &amp; Auditoria</option>
+                </select>
+              </div>
+              <div class="sk-field sk-span-2">
+                <label class="sk-label" for="txt-detalhes">Descrição Detalhada dos Fatos</label>
+                <textarea class="sk-textarea" id="txt-detalhes" rows="3">Relato circunstanciado com apontamento de requisitos e datas de ocorrência...</textarea>
+              </div>
             </div>
-          ` : ""}
-
-          <div class="sk-card">
-            <div class="sk-rule-badge"><span>RN-01</span> Validação Obrigatória</div>
+            <button class="sk-btn sk-btn-primary" id="btn-next-step" style="margin-top:10px">
+              Avançar para Evidências &rarr;
+            </button>
+          `;
+        } else if (step === 2) {
+          formContentHtml = `
+            <div class="sk-rule-badge"><span>RN-02</span> Upload Validado até 15&nbsp;MB</div>
+            <label class="sk-label">Anexo de Documentos e Comprovantes</label>
+            <div class="sk-dropzone" id="btn-drop">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              <span>Clique para anexar arquivo (PDF, PNG, JPG)</span>
+              <small>Limite por arquivo: 15&nbsp;MB com hash de integridade</small>
+            </div>
+            <div class="sk-file-chip" id="file-chip">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+              <span>evidencia_ouvidoria_v1.pdf (1.8&nbsp;MB)</span>
+              <button class="sk-chip-del" id="btn-del-file" aria-label="Remover anexo">&times;</button>
+            </div>
+            <div class="sk-checkbox-wrap" style="margin-top:10px">
+              <input type="checkbox" id="chk-termos" checked />
+              <label for="chk-termos">Declaro a veracidade das evidências e autorizo o tratamento de dados conforme a LGPD.</label>
+            </div>
+            <div class="sk-row" style="gap:10px;margin-top:12px">
+              <button class="sk-btn sk-btn-outline" id="btn-prev-step" style="width:auto;padding:0 18px">&larr; Voltar</button>
+              <button class="sk-btn sk-btn-primary" id="btn-next-step" style="flex:1">Avançar para Revisão &rarr;</button>
+            </div>
+          `;
+        } else {
+          formContentHtml = `
+            <div class="sk-rule-badge"><span>RN-03</span> Resumo de Conformidade</div>
+            <div class="sk-stack" style="gap:8px;font-size:13px;color:var(--sk-ink-2)">
+              <div class="sk-row" style="justify-content:space-between;padding:8px;background:var(--sk-surface-2);border-radius:6px">
+                <span>Título:</span>
+                <strong style="color:var(--sk-ink)">Solicitação de Análise e Parecer Técnico</strong>
+              </div>
+              <div class="sk-row" style="justify-content:space-between;padding:8px;background:var(--sk-surface-2);border-radius:6px">
+                <span>Categoria:</span>
+                <strong>Operacional / Processos</strong>
+              </div>
+              <div class="sk-row" style="justify-content:space-between;padding:8px;background:var(--sk-surface-2);border-radius:6px">
+                <span>Evidências:</span>
+                <strong style="color:var(--sk-success)">1 documento anexado (1.8&nbsp;MB)</strong>
+              </div>
+              <div class="sk-row" style="justify-content:space-between;padding:8px;background:var(--sk-surface-2);border-radius:6px">
+                <span>SLA Calculado:</span>
+                <strong class="sk-tabnum" style="color:var(--brand-pitang)">24h úteis</strong>
+              </div>
+            </div>
+            <div class="sk-row" style="gap:10px;margin-top:14px">
+              <button class="sk-btn sk-btn-outline" id="btn-prev-step" style="width:auto;padding:0 18px">&larr; Voltar</button>
+              <button class="sk-btn sk-btn-primary" id="btn-enviar-form" style="flex:1">Concluir &amp; Gerar Protocolo</button>
+            </div>
+          `;
+        }
+      } else {
+        // Direct / Analytical (Single View)
+        formContentHtml = `
+          <div class="sk-rule-badge"><span>RN-01</span> Validação Obrigatória de Requisitos</div>
+          <div class="sk-form-grid-2col">
             <div class="sk-field">
               <label class="sk-label" for="inp-titulo">Título / Assunto da Solicitação</label>
               <input class="sk-input" id="inp-titulo" type="text" value="Solicitação de Análise e Parecer Técnico" />
@@ -232,12 +301,12 @@
               </select>
             </div>
 
-            <div class="sk-field">
+            <div class="sk-field sk-span-2">
               <label class="sk-label" for="txt-detalhes">Descrição Detalhada dos Fatos</label>
               <textarea class="sk-textarea" id="txt-detalhes" rows="3">Relato circunstanciado com apontamento de requisitos e datas de ocorrência...</textarea>
             </div>
 
-            <div class="sk-field">
+            <div class="sk-field sk-span-2">
               <div class="sk-rule-badge"><span>RN-02</span> Upload Validado até 15&nbsp;MB</div>
               <label class="sk-label">Anexo de Documentos e Comprovantes</label>
               <div class="sk-dropzone" id="btn-drop">
@@ -248,40 +317,115 @@
               <div class="sk-file-chip" id="file-chip" style="display:none">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
                 <span>documento_comprovatorio_v1.pdf (1.8&nbsp;MB)</span>
-                <button class="sk-chip-del" id="btn-del-file">&times;</button>
+                <button class="sk-chip-del" id="btn-del-file" aria-label="Remover anexo">&times;</button>
               </div>
             </div>
 
-            <div class="sk-checkbox-wrap">
+            <div class="sk-checkbox-wrap sk-span-2">
               <input type="checkbox" id="chk-termos" checked />
               <label for="chk-termos">Declaro estar ciente dos termos de uso e autorizo o tratamento de dados conforme a LGPD.</label>
             </div>
 
-            <button class="sk-btn sk-btn-primary" id="btn-enviar-form" style="margin-top:10px">
-              ${isWizard ? "Avançar para Revisão &rarr;" : "Submeter Solicitação"}
-            </button>
+            <div class="sk-span-2">
+              <button class="sk-btn sk-btn-primary" id="btn-enviar-form" style="margin-top:6px">
+                Submeter Solicitação
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      root.innerHTML = `
+        ${bar({ title: flow.title, back: true })}
+        <div class="sk-scroll">
+          <div class="sk-pad sk-stack" style="padding-top:16px">
+            <div class="sk-row" style="justify-content:space-between;align-items:center">
+              <div>
+                <span class="sk-pill-tag">${esc(flow.category)}</span>
+                <h2 class="sk-h2">${esc(flow.title)}</h2>
+              </div>
+              <span class="sk-metric-pill">SLA Estimado: <strong class="sk-tabnum">24h</strong></span>
+            </div>
+
+            ${isWizard ? `
+              <div class="sk-stepper">
+                <div class="sk-step ${step >= 1 ? (step === 1 ? 'sk-step-active' : 'sk-step-done') : ''}" data-step-target="1"><span class="sk-tabnum">1</span> Dados</div>
+                <div class="sk-step ${step >= 2 ? (step === 2 ? 'sk-step-active' : 'sk-step-done') : ''}" data-step-target="2"><span class="sk-tabnum">2</span> Evidências</div>
+                <div class="sk-step ${step === 3 ? 'sk-step-active' : ''}" data-step-target="3"><span class="sk-tabnum">3</span> Revisão</div>
+              </div>
+              <div class="sk-ai-box" style="margin-top:2px">
+                <div class="sk-row" style="gap:6px;align-items:center">
+                  <span class="sk-ai-sparkle">✦</span>
+                  <strong style="font-size:13px">Assistente Pitang de Preenchimento</strong>
+                </div>
+                <p style="font-size:12.5px;color:var(--sk-ink-2);margin:4px 0 0">
+                  Campos pré-preenchidos a partir do histórico anterior. Verifique os dados abaixo.
+                </p>
+              </div>
+            ` : ""}
+
+            <div class="sk-card">
+              ${formContentHtml}
+            </div>
           </div>
         </div>
-      </div>
-      ${tabs(flow.id)}
-    `;
+        ${tabs(flow.id)}
+      `;
 
-    const unDrop = K.on(root, "#btn-drop", "click", () => {
-      const chip = root.querySelector("#file-chip");
-      if (chip) {
-        chip.style.display = "flex";
-        K.toast(root, "Arquivo anexado com sucesso (1.8 MB)");
+      // Event Wiring
+      const btnNext = root.querySelector("#btn-next-step");
+      if (btnNext) {
+        btnNext.addEventListener("click", () => {
+          step = Math.min(3, step + 1);
+          renderView();
+        });
       }
-    });
-    const unDel = K.on(root, "#btn-del-file", "click", (e) => {
-      e.stopPropagation();
-      const chip = root.querySelector("#file-chip");
-      if (chip) chip.style.display = "none";
-    });
-    const unSubmit = K.on(root, "#btn-enviar-form", "click", () => {
-      K.toast(root, "Solicitação processada! Protocolo: PIT-2026-94812");
-    });
-    return () => { unDrop(); unDel(); unSubmit(); };
+
+      const btnPrev = root.querySelector("#btn-prev-step");
+      if (btnPrev) {
+        btnPrev.addEventListener("click", () => {
+          step = Math.max(1, step - 1);
+          renderView();
+        });
+      }
+
+      root.querySelectorAll("[data-step-target]").forEach(stEl => {
+        stEl.addEventListener("click", () => {
+          step = parseInt(stEl.dataset.stepTarget, 10);
+          renderView();
+        });
+      });
+
+      const btnDrop = root.querySelector("#btn-drop");
+      if (btnDrop) {
+        btnDrop.addEventListener("click", () => {
+          const chip = root.querySelector("#file-chip");
+          if (chip) {
+            chip.style.display = "flex";
+            K.toast(root, "Arquivo anexado com sucesso (1.8 MB)");
+          }
+        });
+      }
+
+      const btnDel = root.querySelector("#btn-del-file");
+      if (btnDel) {
+        btnDel.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const chip = root.querySelector("#file-chip");
+          if (chip) chip.style.display = "none";
+        });
+      }
+
+      const btnSubmit = root.querySelector("#btn-enviar-form");
+      if (btnSubmit) {
+        btnSubmit.addEventListener("click", () => {
+          K.toast(root, "Solicitação processada! Protocolo: PIT-2026-94812");
+        });
+      }
+    }
+
+    renderView();
+    return () => {};
   }
 
   /* ------------------------------------------------------------------
@@ -312,7 +456,7 @@
                 <span class="sk-kanban-count sk-tabnum">5</span>
               </div>
               <div class="sk-kanban-cards">
-                <div class="sk-kanban-card sk-press" data-card-id="PIT-101">
+                <div class="sk-kanban-card sk-press" data-card-id="PIT-101" data-title="Denúncia Emergencial">
                   <div class="sk-row" style="justify-content:space-between">
                     <span class="sk-badge-sm sk-tabnum">PIT-101</span>
                     <span class="sk-sla-tag sk-sla-tag-alert sk-tabnum">&lt; 2h</span>
@@ -320,7 +464,7 @@
                   <strong class="sk-kcard-t">Denúncia Emergencial</strong>
                   <span class="sk-kcard-sub">Diretoria de Operações</span>
                 </div>
-                <div class="sk-kanban-card sk-press" data-card-id="PIT-102">
+                <div class="sk-kanban-card sk-press" data-card-id="PIT-102" data-title="Reclamação de SLA">
                   <div class="sk-row" style="justify-content:space-between">
                     <span class="sk-badge-sm sk-tabnum">PIT-102</span>
                     <span class="sk-sla-tag sk-tabnum">12h</span>
@@ -337,7 +481,7 @@
                 <span class="sk-kanban-count sk-tabnum">8</span>
               </div>
               <div class="sk-kanban-cards">
-                <div class="sk-kanban-card sk-press" data-card-id="PIT-098">
+                <div class="sk-kanban-card sk-press" data-card-id="PIT-098" data-title="Auditoria de Dados">
                   <div class="sk-row" style="justify-content:space-between">
                     <span class="sk-badge-sm sk-tabnum">PIT-098</span>
                     <span class="sk-sla-tag sk-tabnum">28h</span>
@@ -354,7 +498,7 @@
                 <span class="sk-kanban-count sk-tabnum">34</span>
               </div>
               <div class="sk-kanban-cards">
-                <div class="sk-kanban-card sk-card-done sk-press" data-card-id="PIT-087">
+                <div class="sk-kanban-card sk-card-done sk-press" data-card-id="PIT-087" data-title="Elogio ao Atendimento">
                   <div class="sk-row" style="justify-content:space-between">
                     <span class="sk-badge-sm sk-tabnum">PIT-087</span>
                     <span class="sk-badge-check">✓ Despachado</span>
@@ -382,87 +526,159 @@
     `;
 
     const unCard = K.on(root, "[data-card-id]", "click", (e, el) => {
-      K.sheet(root, `
-        <h3 class="sk-h3">Dossiê Operacional · ${el.dataset.cardId}</h3>
-        <p style="font-size:13px;color:var(--sk-ink-2);margin:8px 0">Selecione o encaminhamento com base nas regras de negócio:</p>
+      const cId = el.dataset.cardId;
+      const cTitle = el.dataset.title || "Demanda Operacional";
+      const sheetInst = K.sheet(root, `
+        <h3 class="sk-h3">Dossiê Operacional · ${cId}</h3>
+        <p style="font-size:13px;color:var(--sk-ink-2);margin:8px 0">${esc(cTitle)}</p>
+        <p style="font-size:12.5px;color:var(--sk-ink-3);margin-bottom:12px">Selecione o encaminhamento com base nas regras de negócio:</p>
         <div class="sk-stack" style="gap:8px">
-          <button class="sk-btn sk-btn-primary" data-act="admitir">Admitir &amp; Encaminhar</button>
-          <button class="sk-btn sk-btn-outline" data-act="diligencia">Abrir Diligência</button>
-          <button class="sk-btn sk-btn-ghost" data-act="concluir" style="color:var(--brand-pitang)">Arquivar Demanda</button>
+          <button class="sk-btn sk-btn-primary" id="btn-admitir">Admitir &amp; Encaminhar</button>
+          <button class="sk-btn sk-btn-outline" id="btn-diligencia">Abrir Diligência</button>
+          <button class="sk-btn sk-btn-ghost" id="btn-concluir" style="color:var(--brand-pitang)">Arquivar Demanda</button>
         </div>
       `);
+
+      sheetInst.el.querySelector("#btn-admitir")?.addEventListener("click", () => {
+        sheetInst.close();
+        K.toast(root, `Caso ${cId} admitido e encaminhado para diretoria.`);
+      });
+      sheetInst.el.querySelector("#btn-diligencia")?.addEventListener("click", () => {
+        sheetInst.close();
+        K.toast(root, `Diligência aberta para ${cId}. SLA pausado.`);
+      });
+      sheetInst.el.querySelector("#btn-concluir")?.addEventListener("click", () => {
+        sheetInst.close();
+        K.toast(root, `Caso ${cId} arquivado com sucesso.`);
+      });
     });
 
     const unBatch = K.on(root, "#btn-batch-ok", "click", () => {
       K.toast(root, "Lote despachado com sucesso para a diretoria.");
     });
-    return () => { unCard(); unBatch(); };
+    const unEsc = K.on(root, "#btn-batch-escalar", "click", () => {
+      K.toast(root, "Alerta de SLA escalado para a gerência.");
+    });
+    return () => { unCard(); unBatch(); unEsc(); };
   }
 
   /* ------------------------------------------------------------------
-     ARCHETYPE: TABLE & SEARCH
+     ARCHETYPE: TABLE & SEARCH (Interactive live filter & dossier)
      ------------------------------------------------------------------ */
   function renderTableArchetype(root, ctx, flow, dir) {
     const K = window.Kit;
     const { esc, bar, tabs } = K;
 
-    root.innerHTML = `
-      ${bar({ title: flow.title, icons: ["search", "download"] })}
-      <div class="sk-scroll">
-        <div class="sk-pad sk-stack" style="padding-top:16px">
-          <div class="sk-row" style="justify-content:space-between;align-items:center">
-            <div>
-              <span class="sk-pill-tag">${esc(flow.category)}</span>
-              <h2 class="sk-h2">Diretório de Registros</h2>
+    const rows = [
+      { id: "PIT-8941", t: "Denúncia de Compras e Licitação", cat: "Operacional", user: "Carlos Eduardo", dt: "11/11 08:30", sla: "01h 45m", st: "Crítico", cls: "sk-sla-alert" },
+      { id: "PIT-8938", t: "Atraso de Pagamento de Fornecedor", cat: "Financeiro", user: "Mariana Costa", dt: "11/11 09:12", sla: "03h 12m", st: "Urgente", cls: "sk-sla-alert" },
+      { id: "PIT-8924", t: "Acesso a Sistema Corporativo", cat: "Tecnologia", user: "Rodrigo Silveira", dt: "10/11 16:40", sla: "18h 30m", st: "Em Análise", cls: "" },
+      { id: "PIT-8910", t: "Elogio ao Atendimento Ouvidoria", cat: "Institucional", user: "Ana Paula Lima", dt: "10/11 14:15", sla: "42h 10m", st: "Concluído", cls: "" }
+    ];
+
+    let currentFilter = "";
+
+    function renderView() {
+      const filtered = rows.filter(r => {
+        if (!currentFilter) return true;
+        const q = currentFilter.toLowerCase();
+        return r.id.toLowerCase().includes(q) || r.t.toLowerCase().includes(q) || r.cat.toLowerCase().includes(q) || r.st.toLowerCase().includes(q);
+      });
+
+      root.innerHTML = `
+        ${bar({ title: flow.title, icons: ["search", "download"] })}
+        <div class="sk-scroll">
+          <div class="sk-pad sk-stack" style="padding-top:16px">
+            <div class="sk-row" style="justify-content:space-between;align-items:center">
+              <div>
+                <span class="sk-pill-tag">${esc(flow.category)}</span>
+                <h2 class="sk-h2">Diretório de Registros</h2>
+              </div>
+              <button class="sk-btn sk-btn-outline" id="btn-exp-csv" style="width:auto;height:34px;padding:0 14px;font-size:12px">
+                Exportar CSV
+              </button>
             </div>
-            <button class="sk-btn sk-btn-outline" id="btn-exp-csv" style="width:auto;height:32px;padding:0 12px;font-size:12px">
-              Exportar CSV
-            </button>
-          </div>
 
-          <div class="sk-field" style="margin-top:2px">
-            <input class="sk-input" type="search" placeholder="Filtrar por protocolo, assunto ou setor..." value="" />
-          </div>
+            <div class="sk-field" style="margin-top:2px">
+              <input class="sk-input" id="tbl-search-inp" type="search" placeholder="Filtrar por protocolo, assunto ou status..." value="${esc(currentFilter)}" />
+            </div>
 
-          <div class="sk-card" style="padding:4px;overflow-x:auto">
-            <table class="sk-data-table">
-              <thead>
-                <tr>
-                  <th>Protocolo</th>
-                  <th>Assunto</th>
-                  <th>SLA Restante</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${[
-                  { id: "PIT-8941", t: "Denúncia de Compras", sla: "01h 45m", st: "Crítico", cls: "sk-sla-alert" },
-                  { id: "PIT-8938", t: "Atraso de Pagamento", sla: "03h 12m", st: "Urgente", cls: "sk-sla-alert" },
-                  { id: "PIT-8924", t: "Acesso a Sistema", sla: "18h 30m", st: "Em Análise", cls: "" },
-                  { id: "PIT-8910", t: "Elogio Ouvidoria", sla: "42h 10m", st: "Concluído", cls: "" }
-                ].map((row) => `
-                  <tr class="sk-press" data-row-id="${row.id}">
-                    <td class="sk-tabnum"><strong>${row.id}</strong></td>
-                    <td>${row.t}</td>
-                    <td class="sk-tabnum ${row.cls}">${row.sla}</td>
-                    <td><span class="sk-status-pill">${row.st}</span></td>
+            <div class="sk-card" style="padding:4px;overflow-x:auto">
+              <table class="sk-data-table">
+                <thead>
+                  <tr>
+                    <th>Protocolo</th>
+                    <th>Assunto</th>
+                    <th>SLA Restante</th>
+                    <th>Status</th>
                   </tr>
-                `).join("")}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  ${filtered.length > 0 ? filtered.map((row) => `
+                    <tr class="sk-press" data-row-id="${row.id}">
+                      <td class="sk-tabnum"><strong>${row.id}</strong></td>
+                      <td>${row.t}</td>
+                      <td class="sk-tabnum ${row.cls}">${row.sla}</td>
+                      <td><span class="sk-status-pill">${row.st}</span></td>
+                    </tr>
+                  `).join("") : `
+                    <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--sk-ink-3)">Nenhum registro encontrado.</td></tr>
+                  `}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
-      ${tabs(flow.id)}
-    `;
+        ${tabs(flow.id)}
+      `;
 
-    const unRow = K.on(root, "[data-row-id]", "click", (e, tr) => {
-      K.toast(root, `Abrindo registro ${tr.dataset.rowId}`);
-    });
-    const unCsv = K.on(root, "#btn-exp-csv", "click", () => {
-      K.toast(root, "Exportação CSV gerada em conformidade LGPD.");
-    });
-    return () => { unRow(); unCsv(); };
+      // Search input live wiring
+      const searchInp = root.querySelector("#tbl-search-inp");
+      if (searchInp) {
+        searchInp.addEventListener("input", (e) => {
+          currentFilter = e.target.value;
+          renderView();
+        });
+      }
+
+      root.querySelectorAll("[data-row-id]").forEach(tr => {
+        tr.addEventListener("click", () => {
+          const rId = tr.dataset.rowId;
+          const found = rows.find(r => r.id === rId);
+          if (found) {
+            K.sheet(root, `
+              <h3 class="sk-h3">Protocolo · ${found.id}</h3>
+              <p style="font-size:13px;color:var(--sk-ink-2);margin:8px 0">${esc(found.t)}</p>
+              <div class="sk-stack" style="gap:8px;font-size:12.5px;margin:12px 0">
+                <div class="sk-row" style="justify-content:space-between;padding:6px 10px;background:var(--sk-surface-2);border-radius:6px">
+                  <span>Categoria:</span>
+                  <strong>${found.cat}</strong>
+                </div>
+                <div class="sk-row" style="justify-content:space-between;padding:6px 10px;background:var(--sk-surface-2);border-radius:6px">
+                  <span>Requisitante:</span>
+                  <strong>${found.user}</strong>
+                </div>
+                <div class="sk-row" style="justify-content:space-between;padding:6px 10px;background:var(--sk-surface-2);border-radius:6px">
+                  <span>SLA Restante:</span>
+                  <strong class="sk-tabnum" style="color:var(--brand-pitang)">${found.sla}</strong>
+                </div>
+              </div>
+              <button class="sk-btn sk-btn-primary" data-close>Fechar Dossiê</button>
+            `);
+          }
+        });
+      });
+
+      const btnExp = root.querySelector("#btn-exp-csv");
+      if (btnExp) {
+        btnExp.addEventListener("click", () => {
+          K.toast(root, "Exportação CSV gerada em conformidade LGPD.");
+        });
+      }
+    }
+
+    renderView();
+    return () => {};
   }
 
   /* ------------------------------------------------------------------
@@ -471,75 +687,100 @@
   function renderDashboardArchetype(root, ctx, flow, dir) {
     const K = window.Kit;
     const { esc, bar, tabs } = K;
+    let period = "mes";
 
-    root.innerHTML = `
-      ${bar({ title: flow.title, icons: ["chart", "user"] })}
-      <div class="sk-scroll">
-        <div class="sk-pad sk-stack" style="padding-top:16px">
-          <div class="sk-row" style="justify-content:space-between;align-items:center">
-            <div>
-              <span class="sk-pill-tag">Pitang Intelligence</span>
-              <h2 class="sk-h2">Telemetria &amp; KPIs</h2>
+    function renderView() {
+      root.innerHTML = `
+        ${bar({ title: flow.title, icons: ["chart", "user"] })}
+        <div class="sk-scroll">
+          <div class="sk-pad sk-stack" style="padding-top:16px">
+            <div class="sk-row" style="justify-content:space-between;align-items:center">
+              <div>
+                <span class="sk-pill-tag">Pitang Intelligence</span>
+                <h2 class="sk-h2">Telemetria &amp; KPIs</h2>
+              </div>
+              <div class="sk-row" style="gap:4px">
+                <button class="sk-btn sk-btn-outline ${period === 'mes' ? 'sk-period-active' : ''}" data-period="mes" style="height:28px;padding:0 8px;font-size:11px">Mês</button>
+                <button class="sk-btn sk-btn-outline ${period === 'tri' ? 'sk-period-active' : ''}" data-period="tri" style="height:28px;padding:0 8px;font-size:11px">Trimestre</button>
+                <button class="sk-btn sk-btn-outline ${period === 'ano' ? 'sk-period-active' : ''}" data-period="ano" style="height:28px;padding:0 8px;font-size:11px">Ano</button>
+              </div>
             </div>
-            <span class="sk-period-badge">Novembro / 2026</span>
-          </div>
 
-          <div class="sk-kpi-grid" style="grid-template-columns:repeat(2,1fr)">
-            <div class="sk-kpi-card">
-              <span class="sk-kpi-lbl">Taxa de Resolução</span>
-              <span class="sk-kpi-val sk-tabnum">96.8%</span>
-              <span class="sk-kpi-trend sk-trend-up">+1.8% vs mês ant.</span>
+            <div class="sk-kpi-grid">
+              <div class="sk-kpi-card">
+                <span class="sk-kpi-lbl">Taxa de Resolução</span>
+                <span class="sk-kpi-val sk-tabnum">${period === 'ano' ? '98.4%' : '96.8%'}</span>
+                <span class="sk-kpi-trend sk-trend-up">+1.8% vs período ant.</span>
+              </div>
+              <div class="sk-kpi-card">
+                <span class="sk-kpi-lbl">Tempo Médio SLA</span>
+                <span class="sk-kpi-val sk-tabnum">${period === 'tri' ? '14.2h' : '16.4h'}</span>
+                <span class="sk-kpi-trend sk-trend-up">-3.2h de redução</span>
+              </div>
+              <div class="sk-kpi-card">
+                <span class="sk-kpi-lbl">Demandas Totais</span>
+                <span class="sk-kpi-val sk-tabnum">${period === 'ano' ? '34.120' : (period === 'tri' ? '8.540' : '2.840')}</span>
+                <span class="sk-kpi-trend">100% auditadas</span>
+              </div>
+              <div class="sk-kpi-card">
+                <span class="sk-kpi-lbl">Conformidade LGPD</span>
+                <span class="sk-kpi-val sk-tabnum">99.9%</span>
+                <span class="sk-kpi-trend sk-trend-up">Em conformidade</span>
+              </div>
             </div>
-            <div class="sk-kpi-card">
-              <span class="sk-kpi-lbl">Tempo Médio SLA</span>
-              <span class="sk-kpi-val sk-tabnum">16.4h</span>
-              <span class="sk-kpi-trend sk-trend-up">-3.2h de redução</span>
-            </div>
-            <div class="sk-kpi-card">
-              <span class="sk-kpi-lbl">Demandas Totais</span>
-              <span class="sk-kpi-val sk-tabnum">2.840</span>
-              <span class="sk-kpi-trend">100% auditadas</span>
-            </div>
-            <div class="sk-kpi-card">
-              <span class="sk-kpi-lbl">Conformidade LGPD</span>
-              <span class="sk-kpi-val sk-tabnum">99.9%</span>
-              <span class="sk-kpi-trend sk-trend-up">Em conformidade</span>
-            </div>
-          </div>
 
-          <div class="sk-card">
-            <div class="sk-rule-badge"><span>RN-03</span> Distribuição por Diretoria</div>
-            <strong style="display:block;margin:6px 0 10px;font-size:13.5px">Volume por Área Responsável</strong>
-            <div class="sk-stack" style="gap:10px">
-              ${[
-                { n: "Operações & Infra", pct: 45, c: 1278, col: "#ED1C24" },
-                { n: "Tecnologia & Sistemas", pct: 30, c: 852, col: "#2F5D9E" },
-                { n: "Recursos Humanos & Gestão", pct: 15, c: 426, col: "#1F6F5C" },
-                { n: "Jurídico & Compliance", pct: 10, c: 284, col: "#9A5A12" }
-              ].map((item) => `
-                <div>
-                  <div class="sk-row" style="justify-content:space-between;font-size:12px;margin-bottom:4px">
-                    <span>${item.n}</span>
-                    <strong class="sk-tabnum">${item.c} (${item.pct}%)</strong>
+            <div class="sk-card">
+              <div class="sk-rule-badge"><span>RN-03</span> Distribuição por Diretoria</div>
+              <strong style="display:block;margin:6px 0 10px;font-size:13.5px">Volume por Área Responsável</strong>
+              <div class="sk-stack" style="gap:10px">
+                ${[
+                  { n: "Operações & Infra", pct: 45, c: 1278, col: "#ED1C24" },
+                  { n: "Tecnologia & Sistemas", pct: 30, c: 852, col: "#2F5D9E" },
+                  { n: "Recursos Humanos & Gestão", pct: 15, c: 426, col: "#1F6F5C" },
+                  { n: "Jurídico & Compliance", pct: 10, c: 284, col: "#9A5A12" }
+                ].map((item) => `
+                  <div class="sk-bar-row" style="cursor:pointer" data-bar-name="${item.n}">
+                    <div class="sk-row" style="justify-content:space-between;font-size:12px;margin-bottom:4px">
+                      <span>${item.n}</span>
+                      <strong class="sk-tabnum">${item.c} (${item.pct}%)</strong>
+                    </div>
+                    <div class="sk-bar-bg"><div class="sk-bar-fill" style="width:${item.pct}%;background:${item.col}"></div></div>
                   </div>
-                  <div class="sk-bar-bg"><div class="sk-bar-fill" style="width:${item.pct}%;background:${item.col}"></div></div>
-                </div>
-              `).join("")}
-            </div>
+                `).join("")}
+              </div>
 
-            <button class="sk-btn sk-btn-primary" id="btn-export-rep" style="margin-top:14px">
-              Exportar Relatório Consolidado (PDF)
-            </button>
+              <button class="sk-btn sk-btn-primary" id="btn-export-rep" style="margin-top:14px">
+                Exportar Relatório Consolidado (PDF)
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      ${tabs(flow.id)}
-    `;
+        ${tabs(flow.id)}
+      `;
 
-    const unRep = K.on(root, "#btn-export-rep", "click", () => {
-      K.toast(root, "Relatório executivo gerado com assinatura digital.");
-    });
-    return () => unRep();
+      root.querySelectorAll("[data-period]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          period = btn.dataset.period;
+          renderView();
+        });
+      });
+
+      root.querySelectorAll("[data-bar-name]").forEach(barRow => {
+        barRow.addEventListener("click", () => {
+          K.toast(root, `Filtro ativo: ${barRow.dataset.barName}`);
+        });
+      });
+
+      const btnExp = root.querySelector("#btn-export-rep");
+      if (btnExp) {
+        btnExp.addEventListener("click", () => {
+          K.toast(root, "Relatório executivo gerado com assinatura digital.");
+        });
+      }
+    }
+
+    renderView();
+    return () => {};
   }
 
   /* ------------------------------------------------------------------
@@ -622,50 +863,105 @@
   function renderCopilotArchetype(root, ctx, flow, dir) {
     const K = window.Kit;
     const { esc, bar, tabs } = K;
+    let isEditing = false;
+    let currentMinuta = "Com base na documentação anexada, a manifestação atende integralmente aos requisitos da Instrução Normativa nº 14/2026. Sugere-se admissibilidade com despacho à Diretoria de Operações.";
 
-    root.innerHTML = `
-      ${bar({ title: flow.title, icons: ["sparkles", "user"] })}
-      <div class="sk-scroll">
-        <div class="sk-pad sk-stack" style="padding-top:16px">
-          <div class="sk-ai-header">
-            <div class="sk-row" style="gap:6px;align-items:center">
-              <span class="sk-ai-sparkle">✦</span>
-              <span class="sk-ai-badge">Pitang Copilot RAG</span>
-            </div>
-            <h2 class="sk-h2" style="margin-top:4px">Assistente Operacional</h2>
-            <p class="sk-sub">Análise preditiva de precedentes e elaboração de respostas automáticas.</p>
-          </div>
-
-          <div class="sk-card sk-card-ai-glow">
-            <div class="sk-ai-box">
-              <div class="sk-row" style="justify-content:space-between">
-                <strong>Minuta Recomendada</strong>
-                <span class="sk-pill-confidence sk-tabnum">99.1% similaridade</span>
+    function renderView() {
+      root.innerHTML = `
+        ${bar({ title: flow.title, icons: ["sparkles", "user"] })}
+        <div class="sk-scroll">
+          <div class="sk-pad sk-stack" style="padding-top:16px">
+            <div class="sk-ai-header">
+              <div class="sk-row" style="gap:6px;align-items:center">
+                <span class="sk-ai-sparkle">✦</span>
+                <span class="sk-ai-badge">Pitang Copilot RAG</span>
               </div>
-              <p style="font-size:13px;color:var(--sk-ink-2);margin:8px 0;line-height:1.4">
-                "Com base na documentação anexada, a manifestação atende integralmente aos requisitos da Instrução Normativa nº 14/2026. Sugere-se admissibilidade com despacho à Diretoria de Operações."
-              </p>
-              <div class="sk-row" style="gap:8px">
-                <button class="sk-btn sk-btn-primary" id="btn-aceitar-ia" style="height:36px;font-size:12.5px">Aceitar Minuta</button>
-                <button class="sk-btn sk-btn-outline" id="btn-editar-ia" style="height:36px;font-size:12.5px">Editar</button>
+              <h2 class="sk-h2" style="margin-top:4px">Assistente Operacional</h2>
+              <p class="sk-sub">Análise preditiva de precedentes e elaboração de respostas automáticas.</p>
+            </div>
+
+            <div class="sk-card sk-card-ai-glow">
+              <div class="sk-ai-box">
+                <div class="sk-row" style="justify-content:space-between">
+                  <strong>Minuta Recomendada</strong>
+                  <span class="sk-pill-confidence sk-tabnum">99.1% similaridade</span>
+                </div>
+                ${isEditing ? `
+                  <textarea class="sk-textarea" id="txt-minuta" rows="4" style="margin:8px 0;font-size:13px">${esc(currentMinuta)}</textarea>
+                  <div class="sk-row" style="gap:8px">
+                    <button class="sk-btn sk-btn-primary" id="btn-salvar-ia" style="height:36px;font-size:12.5px">Salvar Alterações</button>
+                    <button class="sk-btn sk-btn-outline" id="btn-cancelar-ia" style="height:36px;font-size:12.5px">Cancelar</button>
+                  </div>
+                ` : `
+                  <p style="font-size:13px;color:var(--sk-ink-2);margin:8px 0;line-height:1.4">
+                    "${esc(currentMinuta)}"
+                  </p>
+                  <div class="sk-row" style="gap:8px">
+                    <button class="sk-btn sk-btn-primary" id="btn-aceitar-ia" style="height:36px;font-size:12.5px">Aceitar Minuta</button>
+                    <button class="sk-btn sk-btn-outline" id="btn-editar-ia" style="height:36px;font-size:12.5px">Editar</button>
+                  </div>
+                `}
+              </div>
+
+              <div class="sk-field" style="margin-top:10px">
+                <label class="sk-label" for="inp-prompt">Solicitar Ajuste ao Copilot</label>
+                <div class="sk-row" style="gap:8px">
+                  <input class="sk-input" id="inp-prompt" placeholder="Ex: Tornar o parecer mais sucinto..." />
+                  <button class="sk-btn sk-btn-outline" id="btn-gerar-var" style="width:auto;padding:0 16px;white-space:nowrap">Gerar Variação</button>
+                </div>
               </div>
             </div>
-
-            <div class="sk-field" style="margin-top:10px">
-              <label class="sk-label" for="inp-prompt">Solicitar Ajuste ao Copilot</label>
-              <input class="sk-input" id="inp-prompt" placeholder="Ex: Tornar o parecer mais sucinto e incluir prazo de 48h..." />
-            </div>
-
-            <button class="sk-btn sk-btn-outline" id="btn-gerar-var">Gerar Variação Alternativa</button>
           </div>
         </div>
-      </div>
-      ${tabs(flow.id)}
-    `;
+        ${tabs(flow.id)}
+      `;
 
-    const unA = K.on(root, "#btn-aceitar-ia", () => K.toast(root, "Minuta adotada como despacho oficial!"));
-    const unV = K.on(root, "#btn-gerar-var", () => K.toast(root, "Nova versão gerada em 180ms."));
-    return () => { unA(); unV(); };
+      const btnAceitar = root.querySelector("#btn-aceitar-ia");
+      if (btnAceitar) {
+        btnAceitar.addEventListener("click", () => {
+          K.toast(root, "Minuta adotada como despacho oficial!");
+        });
+      }
+
+      const btnEditar = root.querySelector("#btn-editar-ia");
+      if (btnEditar) {
+        btnEditar.addEventListener("click", () => {
+          isEditing = true;
+          renderView();
+        });
+      }
+
+      const btnSalvar = root.querySelector("#btn-salvar-ia");
+      if (btnSalvar) {
+        btnSalvar.addEventListener("click", () => {
+          const txt = root.querySelector("#txt-minuta");
+          if (txt) currentMinuta = txt.value;
+          isEditing = false;
+          K.toast(root, "Minuta atualizada.");
+          renderView();
+        });
+      }
+
+      const btnCancelar = root.querySelector("#btn-cancelar-ia");
+      if (btnCancelar) {
+        btnCancelar.addEventListener("click", () => {
+          isEditing = false;
+          renderView();
+        });
+      }
+
+      const btnGerar = root.querySelector("#btn-gerar-var");
+      if (btnGerar) {
+        btnGerar.addEventListener("click", () => {
+          K.toast(root, "Nova variação gerada em 180ms pelo Copilot.");
+          currentMinuta = "Em atenção aos autos e ao histórico de manifestações correlatas, verifica-se o pleno atendimento das condições formais. Encaminha-se para deliberação conclusiva no prazo de 48h.";
+          renderView();
+        });
+      }
+    }
+
+    renderView();
+    return () => {};
   }
 
   /* ------------------------------------------------------------------
