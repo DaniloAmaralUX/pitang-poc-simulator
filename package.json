@@ -5,6 +5,10 @@
   "private": false,
   "license": "MIT",
   "author": "Pitang Labs",
+  "bin": {
+    "pitang-poc": "./bin/cli.js",
+    "poc-simulator": "./bin/cli.js"
+  },
   "scripts": {
     "build": "python scripts/build.py",
     "simulate": "python scripts/simulate.py",
