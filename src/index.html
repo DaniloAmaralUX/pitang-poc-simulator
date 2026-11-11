@@ -29,7 +29,7 @@
         <span class="brand-labs-tag">LABS</span>
       </div>
       <h1 class="brand-title">Simulador de POC</h1>
-      <span class="brand-sub">Mapeamento de fluxos, regras de negócio e validação de usabilidade (Jakub Krehel).</span>
+      <span class="brand-sub">Explore o briefing e compare modelos de interface. A implementação funcional é feita pelo agente na IDE.</span>
 
       <!-- Primary Action: Edit / Input Requirements -->
       <button class="btn-open-requirements" type="button" aria-label="Abrir editor de requisitos (Atalho: Ctrl+K)">
@@ -37,6 +37,9 @@
         <span>Requisitos &amp; Regras</span>
         <kbd>⌘K</kbd>
       </button>
+
+      <button class="btn-open-artifact" type="button">Abrir POC HTML</button>
+      <input id="artifact-file" type="file" accept=".html,.htm,text/html" hidden />
 
       <!-- Search & Category Filters -->
       <div class="rail-search-wrap">
@@ -74,10 +77,10 @@
         </div>
       </div>
       <div class="ctl">
-        <span class="ctl-label" id="l-inspector">Audit Jakub UX</span>
+        <span class="ctl-label" id="l-inspector">Inspeção visual</span>
         <div class="seg" data-key="inspector" role="group" aria-labelledby="l-inspector">
           <button data-val="off">Padrão</button>
-          <button data-val="on">Audit UX</button>
+          <button data-val="on">Inspecionar</button>
         </div>
       </div>
       <button class="tour-again" type="button">Apresentar Tour</button>
@@ -91,7 +94,7 @@
   <main class="stage">
     <div class="stage-h" aria-live="polite">
       <div class="stage-flow"></div>
-      <div class="stage-ver"></div>
+      <div class="stage-ver"></div><p class="preview-disclaimer">Prévia por modelos · Dados de exemplo · Requisitos ainda não verificados</p>
     </div>
     <div class="device-wrap">
       <div class="device" data-device="ios">
@@ -108,6 +111,7 @@
 <!-- Embedded System Scripts -->
 <script>/*__KIT_JS__*/</script>
 <script>/*__PARSER_JS__*/</script>
+<script>/*__SNAPSHOT_JS__*/</script>
 <script>/*__DEFAULT_POC_JS__*/</script>
 <script>/*__GENERATOR_JS__*/</script>
 <script>/*__SHELL_JS__*/</script>

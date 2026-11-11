@@ -29,6 +29,7 @@ def build(custom_project_json_str: str = None) -> pathlib.Path:
         "/*__KIT_CSS__*/": read("kit.css"),
         "/*__KIT_JS__*/": read("kit.js"),
         "/*__PARSER_JS__*/": read("simulator/parser.js"),
+        "/*__SNAPSHOT_JS__*/": read("simulator/snapshot.js"),
         "/*__DEFAULT_POC_JS__*/": read("simulator/default-poc.js"),
         "/*__GENERATOR_JS__*/": read("simulator/generator.js"),
         "/*__SHELL_JS__*/": read("shell.js"),

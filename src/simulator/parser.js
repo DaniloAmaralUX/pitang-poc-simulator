@@ -170,16 +170,31 @@
     const text = rawText.trim();
     const lines = text.split(/\r?\n/);
 
-    // Try parsing as JSON first
-    if (text.startsWith("{") && text.endsWith("}")) {
-      try {
-        const json = JSON.parse(text);
-        if (json.flows && Array.isArray(json.flows)) {
-          return normalizeProjectJson(json);
-        }
-      } catch (e) {
-        // Not JSON, continue to heuristic parsing
+    // Structured input must be valid; never reinterpret broken JSON as a business brief.
+    if (/^[{\[]/.test(text)) {
+      let json;
+      try { json = JSON.parse(text); }
+      catch { throw new Error("JSON inválido. Corrija o arquivo ou envie uma descrição em texto."); }
+      if (!json || !Array.isArray(json.flows) || !json.flows.length || json.flows.length > 100) {
+        throw new Error("O JSON deve conter uma lista flows com 1 a 100 fluxos.");
       }
+      const ids = new Set();
+      const supported = ["auth", "form", "kanban", "table", "dashboard", "timeline", "copilot", "approval", "brief", "html"];
+      for (const f of json.flows) {
+        if (!f || typeof f.title !== "string" || !f.title.trim() ||
+            (f.id != null && (typeof f.id !== "string" || !f.id.trim())) ||
+            ["category", "sum", "description"].some(k => f[k] != null && typeof f[k] !== "string") ||
+            ["rules", "fields", "actions", "today"].some(k => f[k] != null && (!Array.isArray(f[k]) || f[k].some(v => typeof v !== "string"))) ||
+            (f.archetype && !supported.includes(f.archetype))) {
+          throw new Error("Cada fluxo precisa de título e listas de regras, campos e ações em texto.");
+        }
+        const id = f.id || `flow-${ids.size + 1}`;
+        if (ids.has(id)) throw new Error("Os identificadores dos fluxos devem ser únicos.");
+        ids.add(id);
+      }
+      const result = normalizeProjectJson(json);
+      result.rawText = typeof json.rawText === "string" ? json.rawText : text;
+      return result;
     }
 
     let title = "Pitang Labs · POC Simulator";
@@ -316,16 +331,9 @@
         ? f.category
         : classifyCategory(f.title, f.sum, f.rules);
 
-      const archetype = detectArchetype(f.title, f.sum, f.rules);
+      const archetype = f.archetype || detectArchetype(f.title, f.sum, f.rules);
 
       let rules = f.rules && f.rules.length > 0 ? f.rules : [];
-      if (rules.length === 0) {
-        rules = [
-          `RN-${String(idx + 1).padStart(2, "0")}.1: Validação de dados com feedback tátil e prevenção de erros`,
-          `RN-${String(idx + 1).padStart(2, "0")}.2: Padrão de usabilidade Jakub Krehel e conformidade WCAG AA`,
-          `RN-${String(idx + 1).padStart(2, "0")}.3: Persistência de estado com registro em auditoria`
-        ];
-      }
 
       return {
         ...f,
@@ -358,99 +366,18 @@
    * Helper to parse free-form / paragraph text into logical flows
    */
   function extractFlowsFromFreeText(text) {
-    const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim().length > 20);
-
-    if (paragraphs.length >= 2) {
-      return paragraphs.slice(0, 6).map((para, i) => {
-        const firstLine = para.trim().split("\n")[0].replace(/^[#*-.\s]+/, "");
-        const title = firstLine.length < 50 ? firstLine : `Etapa ${i + 1}: ${firstLine.slice(0, 45)}…`;
-        const category = classifyCategory(title, para, []);
-        const archetype = detectArchetype(title, para, []);
-
-        return {
-          id: slugify(title) || `fluxo-${i + 1}`,
-          title: title,
-          category: category,
-          archetype: archetype,
-          sum: para.trim().replace(/\n/g, " ").slice(0, 160) + (para.length > 160 ? "…" : ""),
-          rules: [
-            `RN-${String(i + 1).padStart(2, "0")}.1: Execução e validação da regra de negócio descrita no requisito`,
-            `RN-${String(i + 1).padStart(2, "0")}.2: Feedback tátil active:scale-[0.96] e isolamento de scroll`
-          ],
-          fields: [],
-          actions: []
-        };
-      });
-    }
-
-    // Default enterprise flows
-    const defaultFlowNames = [
-      {
-        title: "Acesso & Autenticação Segura",
-        sum: "Identificação do usuário, login institucional Gov.br / SSO ou acesso anônimo com criptografia.",
-        category: "01. Acesso & Autenticação",
-        archetype: "auth",
-        rules: [
-          "RN-01: Suporte a login Gov.br, SSO corporativo e opção de manifestação anônima",
-          "RN-02: Mascaramento de dados sensíveis e token de sessão seguro com timeout de 15 minutos"
-        ]
-      },
-      {
-        title: "Registro de Solicitação & Upload",
-        sum: "Formulário em etapas com validação preditiva, preenchimento assistido e upload de comprovantes.",
-        category: "02. Entrada & Registro",
-        archetype: "form",
-        rules: [
-          "RN-03: Upload de documentos (PDF, PNG, JPG) com limite de até 15MB e verificação de integridade",
-          "RN-04: Geração imediata de protocolo alfanumérico único para acompanhamento"
-        ]
-      },
-      {
-        title: "Painel de Triagem & SLA Operacional",
-        sum: "Visão kanban do analista com classificação automática por urgência e suporte de IA generativa.",
-        category: "03. Triagem & Operação",
-        archetype: "kanban",
-        rules: [
-          "RN-05: Alerta visual com temporizador tabular para casos com SLA abaixo de 4 horas",
-          "RN-06: Sugestão automática de parecer prévio por modelo de IA com validação humana obrigatória"
-        ]
-      },
-      {
-        title: "Consulta de Protocolo & Timeline",
-        sum: "Acompanhamento transparente pelo cidadão com linha do tempo de despachos e download de parecer.",
-        category: "04. Acompanhamento & Protocolo",
-        archetype: "timeline",
-        rules: [
-          "RN-07: Consulta pública por número de protocolo com proteção de sigilo",
-          "RN-08: Notificações a cada transição de status homologada"
-        ]
-      },
-      {
-        title: "Dashboard Executivo & Governança",
-        sum: "Telemetria consolidada de resolutividade, tempo médio de atendimento e conformidade legal.",
-        category: "05. Gestão, Métricas & Governança",
-        archetype: "dashboard",
-        rules: [
-          "RN-09: Apresentação de indicadores de atendimento com números tabulares e filtros por período",
-          "RN-10: Exportação de logs de auditoria em conformidade com as diretrizes do Pitang Labs"
-        ]
-      }
-    ];
-
-    return defaultFlowNames.map((item, idx) => ({
-      id: slugify(item.title),
-      title: item.title,
-      sum: item.sum,
-      category: item.category,
-      archetype: item.archetype,
-      rules: item.rules,
-      fields: [],
-      actions: []
-    }));
+    // Preserve the complete brief. A keyword matcher cannot implement arbitrary software.
+    const firstLine = text.split(/\r?\n/).find(line => line.trim()) || "Briefing recebido";
+    return [{
+      id: "briefing", title: firstLine.replace(/^#+\s*/, "").slice(0, 70),
+      category: "Briefing do projeto", archetype: "brief", sum: text,
+      rules: [], fields: [], actions: []
+    }];
   }
 
   function normalizeProjectJson(json) {
     return {
+      artifactHtml: typeof json.artifactHtml === "string" ? json.artifactHtml : "",
       title: json.title || "Pitang Labs · POC Simulator",
       summary: json.summary || "POC Simulator gerada a partir de especificação JSON",
       flows: json.flows.map((f, i) => ({

@@ -49,13 +49,21 @@
   };
 
   let screen, deviceWrap, device, cleanup = null;
+  let requirementsTrigger = null;
 
   /* ---- Initialize Application ---- */
   function init() {
     // Check if user has saved custom requirements in localStorage
-    const savedRequirements = store.get("custom_requirements", null);
+    let embeddedProject = null;
+    try {
+      const snapshot = document.getElementById("poc-project-data");
+      if (snapshot) embeddedProject = window.RequirementsParser.parse(snapshot.textContent);
+    } catch (error) { console.warn("Projeto exportado inválido:", error.message); }
+    if (embeddedProject) currentProject = embeddedProject;
+    const savedRequirements = embeddedProject ? null : store.get("custom_requirements", null);
     if (savedRequirements && window.RequirementsParser) {
-      const parsed = window.RequirementsParser.parse(savedRequirements);
+      let parsed;
+      try { parsed = window.RequirementsParser.parse(savedRequirements); } catch (error) { console.warn(error.message); }
       if (parsed && parsed.flows && parsed.flows.length > 0) {
         currentProject = parsed;
       }
@@ -101,9 +109,37 @@
       btnOpenReq.addEventListener("click", openRequirementsDrawer);
     }
 
+    const artifactInput = document.getElementById("artifact-file");
+    document.querySelector(".btn-open-artifact")?.addEventListener("click", () => artifactInput.click());
+    artifactInput?.addEventListener("change", async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        if (file.size > 5 * 1024 * 1024) throw new Error("Escolha um HTML de até 5 MB.");
+        const html = await file.text();
+        if (!/<(?:!doctype\s+html|html|body)[\s>]/i.test(html)) throw new Error("O arquivo deve conter um documento HTML.");
+        currentProject = {
+          title: file.name, artifactHtml: html, rawText: "# " + file.name + "\n\nPOC HTML importada pelo usuário.",
+          flows: [{id: "aplicacao-html", title: file.name, category: "POC importada", archetype: "html", sum: "Aplicação fornecida em arquivo HTML independente.", rules: [], fields: [], actions: []}],
+          categories: ["POC importada"], personas: {}, totalRules: 0
+        };
+        // Persist metadata as JSON so a later reload does not revert to a keyword template.
+        store.set("custom_requirements", JSON.stringify(currentProject));
+        state.selectedCategory = "all";
+        state.searchQuery = "";
+        document.querySelector(".rail-search").value = "";
+        Object.keys(registry).forEach(key => delete registry[key]);
+        window.PocGenerator.registerProjectScreens(currentProject);
+        renderCategoryChips(); renderFlowsList(); setFlow(0, 0);
+        document.querySelector("#txt-requirements").value = currentProject.rawText;
+      } catch (error) { window.Kit.toast(screen, error.message); }
+      finally { event.target.value = ""; }
+    });
+
     // Global Keyboard Navigation
     document.addEventListener("keydown", (e) => {
-      if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+      if (document.querySelector(".req-drawer[data-open]")) return;
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable || e.target.closest("#screen")) return;
       if (e.metaKey || e.ctrlKey) {
         if (e.key === "k" || e.key === "K") {
           e.preventDefault();
@@ -161,14 +197,14 @@
       return `<button class="cat-chip" data-category="${esc(cat)}" aria-pressed="${pressed}">${esc(label)}</button>`;
     }).join("");
 
-    wrap.addEventListener("click", (e) => {
+    wrap.onclick = (e) => {
       const b = e.target.closest(".cat-chip");
       if (b) {
         state.selectedCategory = b.dataset.category;
         renderCategoryChips();
         renderFlowsList();
       }
-    });
+    };
   }
 
   /* ---- Search Listener ---- */
@@ -479,7 +515,7 @@
     if (state.inspector === "on") {
       const scoreBadge = document.createElement("div");
       scoreBadge.className = "jakub-score-pill";
-      scoreBadge.innerHTML = `Jakub Craft: <span>100/100 · WCAG AA</span>`;
+      scoreBadge.innerHTML = `Inspeção visual: <span>conformidade não verificada</span>`;
       screen.appendChild(scoreBadge);
     }
 
@@ -507,8 +543,8 @@
       <!-- Regras de Negócio Mapeadas -->
       <section class="n-block">
         <h3 class="n-h">
-          <span>Regras de Negócio Envolvidas</span>
-          <span style="color:var(--accent);font-size:11px">${(curVersion.rules || []).length}&nbsp;Atendidas</span>
+          <span>Requisitos do briefing</span>
+          <span style="color:var(--accent);font-size:11px">${(curVersion.rules || []).length}&nbsp;Mapeados</span>
         </h3>
         <div class="n-rules-list">
           ${(curVersion.rules || currentFlow.rules || []).map((r) => {
@@ -531,9 +567,9 @@
         <p class="n-axis">${esc(curVersion.axis)}</p>
       </section>
 
-      <!-- Personas Atendidas -->
+      <!-- Perfis de exemplo -->
       <section class="n-block">
-        <h3 class="n-h">Personas Atendidas</h3>
+        <h3 class="n-h">Perfis de exemplo</h3>
         <div class="personas">
           ${(curVersion.personas || []).map((pId) => {
             const p = personas[pId] || { name: pId, ini: pId.charAt(0).toUpperCase(), color: "#ED1C24" };
@@ -567,17 +603,9 @@
         <p class="n-axis" style="font-size:13px;color:var(--ink-2)">${esc(curVersion.tradeoff)}</p>
       </section>
 
-      <!-- Checklist de Usabilidade Jakub -->
       <section class="n-block">
-        <h3 class="n-h">Jakub Krehel Usability Audit</h3>
-        <div class="jakub-audit-box">
-          <div class="audit-item"><span class="audit-check">✓</span> <span>Raios concêntricos ($R_{ext} = R_{int} + P$)</span></div>
-          <div class="audit-item"><span class="audit-check">✓</span> <span>Escala tátil active:scale-[0.96]</span></div>
-          <div class="audit-item"><span class="audit-check">✓</span> <span>Números tabulares em SLAs e métricas</span></div>
-          <div class="audit-item"><span class="audit-check">✓</span> <span>Área de toque mínima &ge; 44px / 40px</span></div>
-          <div class="audit-item"><span class="audit-check">✓</span> <span>Contraste visual WCAG AA &ge; 4.5:1</span></div>
-          <div class="audit-item"><span class="audit-check">✓</span> <span>Scroll isolado (overscroll-behavior: contain)</span></div>
-        </div>
+        <h3 class="n-h">Verificação pendente</h3>
+        <p class="n-axis">Os requisitos acima foram mapeados, não testados. Valide as interações, regras, teclado e contraste antes de aprovar esta prévia.</p>
       </section>
     `;
 
@@ -875,6 +903,8 @@
 
     const drawer = document.createElement("div");
     drawer.className = "req-drawer";
+    drawer.hidden = true;
+    drawer.inert = true;
     drawer.setAttribute("role", "dialog");
     drawer.setAttribute("aria-modal", "true");
     drawer.setAttribute("aria-label", "Editor de Requisitos & Simulador");
@@ -883,7 +913,7 @@
       <div class="req-drawer-h">
         <div>
           <h2>Simulador de POC · Requisitos</h2>
-          <span style="font-size:12px;color:var(--ink-3)">Cole os requisitos em texto (qualquer formato) para mapear fluxos e regras.</span>
+          <span style="font-size:12px;color:var(--ink-3)">Cole uma descrição livre ou use títulos como “### Fluxo: Nome”. Modelos são exemplos, não uma aplicação gerada por IA.</span>
         </div>
         <button class="sk-ic req-close-btn" aria-label="Fechar gaveta">&times;</button>
       </div>
@@ -913,6 +943,7 @@
         </div>
       </div>
 
+      <p class="req-error" id="req-error" role="alert" hidden></p>
       <div class="req-drawer-f">
         <button class="btn-export-html" id="btn-export-md" title="Baixar especificação em Markdown">
           Baixar PRD (.md)
@@ -922,7 +953,7 @@
         </button>
         <button class="btn-simulate-now" id="btn-run-simulation">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          Simular POC em Tempo Real
+          Atualizar prévia
         </button>
       </div>
     `;
@@ -945,28 +976,45 @@
 
     // Run Simulation
     drawer.querySelector("#btn-run-simulation").addEventListener("click", () => {
-      const text = txtArea.value.trim();
-      if (!text) {
-        alert("Por favor, informe os requisitos antes de simular.");
-        return;
+      const errorEl = drawer.querySelector("#req-error");
+      errorEl.hidden = true;
+      try {
+        const text = txtArea.value.trim();
+        if (!text) throw new Error("Descreva seu projeto antes de atualizar a prévia.");
+        const parsed = currentProject.artifactHtml && text === currentProject.rawText ? currentProject : window.RequirementsParser.parse(text);
+        if (!parsed?.flows?.length) throw new Error("Nenhum fluxo foi encontrado. Revise o texto informado.");
+        currentProject = parsed;
+        state.selectedCategory = "all";
+        state.searchQuery = "";
+        document.querySelector(".rail-search").value = "";
+        store.set("custom_requirements", text);
+        Object.keys(registry).forEach(key => delete registry[key]);
+        window.PocGenerator.registerProjectScreens(currentProject);
+        renderCategoryChips();
+        renderFlowsList();
+        setFlow(0, 0);
+        closeRequirementsDrawer();
+        window.Kit.toast(screen, `${parsed.flows.length} fluxo(s) mapeado(s). Implementação e verificação pendentes.`);
+      } catch (error) {
+        errorEl.textContent = error.message || "Não foi possível ler os requisitos. Revise o texto e tente novamente.";
+        errorEl.hidden = false;
+        txtArea.setAttribute("aria-invalid", "true");
+        txtArea.focus();
       }
-
-      if (window.RequirementsParser && window.PocGenerator) {
-        const parsed = window.RequirementsParser.parse(text);
-        if (parsed && parsed.flows && parsed.flows.length > 0) {
-          currentProject = parsed;
-          store.set("custom_requirements", text);
-          window.PocGenerator.registerProjectScreens(currentProject);
-
-          renderCategoryChips();
-          renderFlowsList();
-          setFlow(0, 0);
-          closeRequirementsDrawer();
-
-          const toastMsg = `POC simulada com sucesso! ${parsed.flows.length} fluxos mapeados em ${parsed.categories.length} categorias.`;
-          window.Kit.toast(screen, toastMsg);
-        }
+    });
+    txtArea.addEventListener("input", () => {
+      txtArea.removeAttribute("aria-invalid");
+      drawer.querySelector("#req-error").hidden = true;
+    });
+    drawer.addEventListener("keydown", event => {
+      if (event.key === "Escape" || ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k")) {
+        event.preventDefault(); event.stopPropagation(); closeRequirementsDrawer(); return;
       }
+      if (event.key !== "Tab") return;
+      const focusable = [...drawer.querySelectorAll('button:not([disabled]), textarea, input:not([type="file"])')].filter(el => el.getClientRects().length);
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     });
 
     // File input trigger
@@ -1017,6 +1065,10 @@
     const scrim = document.querySelector(".req-drawer-scrim");
     const drawer = document.querySelector(".req-drawer");
     if (scrim && drawer) {
+      requirementsTrigger = document.activeElement;
+      drawer.hidden = false;
+      drawer.inert = false;
+      document.querySelector(".app").inert = true;
       scrim.setAttribute("data-open", "");
       drawer.setAttribute("data-open", "");
       const txt = drawer.querySelector("#txt-requirements");
@@ -1028,6 +1080,11 @@
     const scrim = document.querySelector(".req-drawer-scrim");
     const drawer = document.querySelector(".req-drawer");
     if (scrim && drawer) {
+      const wasOpen = drawer.hasAttribute("data-open");
+      drawer.hidden = true;
+      drawer.inert = true;
+      document.querySelector(".app").inert = false;
+      if (wasOpen && requirementsTrigger?.isConnected) requirementsTrigger.focus();
       scrim.removeAttribute("data-open");
       drawer.removeAttribute("data-open");
     }
@@ -1044,7 +1101,20 @@
 
   /* ---- Export Standalone HTML Feature ---- */
   function exportStandaloneHtml() {
-    const docHtml = document.documentElement.outerHTML;
+    const copy = document.documentElement.cloneNode(true);
+    // Export a clean shell: runtime widgets are reconstructed on load.
+    // Keeping their cloned markup would duplicate IDs and lose their event handlers.
+    copy.querySelectorAll("#poc-project-data, .req-drawer, .req-drawer-scrim, .proto-picker, .pop, .tour").forEach(node => node.remove());
+    const snapshot = document.createElement("script");
+    snapshot.id = "poc-project-data";
+    snapshot.type = "application/json";
+    snapshot.textContent = window.PocSnapshot.serialize(currentProject);
+    copy.querySelector("head").appendChild(snapshot);
+    copy.querySelector(".app")?.removeAttribute("inert");
+    const drawer = copy.querySelector(".req-drawer");
+    if (drawer) { drawer.hidden = true; drawer.setAttribute("inert", ""); drawer.removeAttribute("data-open"); }
+    copy.querySelector(".req-drawer-scrim")?.removeAttribute("data-open");
+    const docHtml = "<!doctype html>\n" + copy.outerHTML;
     const blob = new Blob([docHtml], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -1065,6 +1135,8 @@
         .then((r) => r.json())
         .then((data) => {
           if (initialVersion && initialVersion !== data.version) {
+            // Preserve edits while the developer changes source files in the IDE.
+            if (document.querySelector(".req-drawer[data-open]")) return;
             location.reload();
           }
           if (!initialVersion) initialVersion = data.version;

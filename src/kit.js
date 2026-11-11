@@ -109,7 +109,7 @@
   }
 
   // Accessible Toast with role="status" and automatic dismissal
-  function toast(root, msg) {
+  function toast(root, msg, kind = "info") {
     let t = root.querySelector(".sk-toast");
     if (!t) {
       t = document.createElement("div");
@@ -117,7 +117,8 @@
       t.setAttribute("role", "status");
       root.appendChild(t);
     }
-    t.innerHTML = `<span class="sk-toast-icon">✓</span> <span>${esc(msg)}</span>`;
+    const symbol = kind === "success" ? "✓" : kind === "error" ? "!" : "i";
+    t.innerHTML = `<span class="sk-toast-icon" aria-hidden="true">${symbol}</span> <span>${esc(msg)}</span>`;
     t.removeAttribute("data-on");
     requestAnimationFrame(() => t.setAttribute("data-on", ""));
     clearTimeout(t._h);

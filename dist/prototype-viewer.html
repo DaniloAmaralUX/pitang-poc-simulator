@@ -19,7 +19,7 @@
   --panel: #FFFFFF;
   --ink: #0A0D14;
   --ink-2: #484F5D;
-  --ink-3: #7A8497;
+  --ink-3: #596579;
   --line: rgba(10, 13, 20, 0.08);
   --line-2: rgba(10, 13, 20, 0.16);
   --tint: rgba(10, 13, 20, 0.04);
@@ -932,6 +932,36 @@ kbd {
   }
 }
 
+/* Usable editor and honest preview status, including narrow viewports. */
+[hidden] { display: none !important; }
+.preview-disclaimer { color: var(--ink-2); font-size: 12px; line-height: 1.5; margin: 8px 0 0; }
+.req-error { color: var(--ink); background: var(--accent-surface); padding: 12px 20px; margin: 0; border-block: 1px solid var(--line); font-size: 13px; }
+.req-drawer { overflow: hidden; max-height: 100dvh; }
+.req-drawer-h { flex-shrink: 0; gap: 12px; }
+.req-drawer-h > div { min-width: 0; }
+.req-drawer-b { min-height: 0; }
+.req-drawer-b > div, .req-drawer-presets { min-width: 0; }
+.req-drawer-presets > .sk-row { flex-wrap: wrap; gap: 10px; }
+.req-drawer-f { flex-shrink: 0; flex-wrap: wrap; }
+.req-drawer-f button { min-height: 44px; height: auto; white-space: normal; padding: 10px 12px; }
+.req-textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.brief-notice { padding: 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink-2); }
+@media (max-width: 760px) {
+  .req-drawer { width: 100%; max-width: 100%; }
+  .req-drawer-h, .req-drawer-b, .req-drawer-f { padding: 16px; }
+  .req-drawer-f > button { flex: 1 1 100%; }
+  .req-presets-row { flex-wrap: wrap; overflow: visible; }
+  .preset-btn { white-space: normal; min-height: 40px; }
+  .req-textarea { min-height: 180px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .req-drawer, .req-drawer-scrim { transition: none; }
+}
+
+.btn-open-artifact { display: block; width: 100%; min-height: 44px; padding: 10px 14px; margin-top: 10px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--panel); color: var(--ink); font: 600 13px var(--f-ui); cursor: pointer; }
+.btn-open-artifact:hover { background: var(--tint); }
+.artifact-preview { display: block; width: 100%; height: 100%; border: 0; background: white; }
+
 /* ==========================================================================
    PITANG LABS · VERSION PICKER (CSS)
    Strict adherence to Emil Kowalski's Prototype Picker Specification:
@@ -1053,9 +1083,18 @@ kbd {
     position: sticky;
     bottom: 12px;
     align-self: center;
+    left: auto;
+    transform: none;
+    width: max-content;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    border-radius: 18px;
     margin: 14px 0;
   }
 }
+
+@media (max-width: 760px) { .proto-picker-item, .proto-picker-replay { min-height: 40px; } }
 
 /* ==========================================================================
    PITANG LABS · DESIGN ENGINEERING KIT (CSS)
@@ -2291,7 +2330,7 @@ kbd {
         <span class="brand-labs-tag">LABS</span>
       </div>
       <h1 class="brand-title">Simulador de POC</h1>
-      <span class="brand-sub">Mapeamento de fluxos, regras de negócio e validação de usabilidade (Jakub Krehel).</span>
+      <span class="brand-sub">Explore o briefing e compare modelos de interface. A implementação funcional é feita pelo agente na IDE.</span>
 
       <!-- Primary Action: Edit / Input Requirements -->
       <button class="btn-open-requirements" type="button" aria-label="Abrir editor de requisitos (Atalho: Ctrl+K)">
@@ -2299,6 +2338,9 @@ kbd {
         <span>Requisitos &amp; Regras</span>
         <kbd>⌘K</kbd>
       </button>
+
+      <button class="btn-open-artifact" type="button">Abrir POC HTML</button>
+      <input id="artifact-file" type="file" accept=".html,.htm,text/html" hidden />
 
       <!-- Search & Category Filters -->
       <div class="rail-search-wrap">
@@ -2336,10 +2378,10 @@ kbd {
         </div>
       </div>
       <div class="ctl">
-        <span class="ctl-label" id="l-inspector">Audit Jakub UX</span>
+        <span class="ctl-label" id="l-inspector">Inspeção visual</span>
         <div class="seg" data-key="inspector" role="group" aria-labelledby="l-inspector">
           <button data-val="off">Padrão</button>
-          <button data-val="on">Audit UX</button>
+          <button data-val="on">Inspecionar</button>
         </div>
       </div>
       <button class="tour-again" type="button">Apresentar Tour</button>
@@ -2353,7 +2395,7 @@ kbd {
   <main class="stage">
     <div class="stage-h" aria-live="polite">
       <div class="stage-flow"></div>
-      <div class="stage-ver"></div>
+      <div class="stage-ver"></div><p class="preview-disclaimer">Prévia por modelos · Dados de exemplo · Requisitos ainda não verificados</p>
     </div>
     <div class="device-wrap">
       <div class="device" data-device="ios">
@@ -2479,7 +2521,7 @@ kbd {
   }
 
   // Accessible Toast with role="status" and automatic dismissal
-  function toast(root, msg) {
+  function toast(root, msg, kind = "info") {
     let t = root.querySelector(".sk-toast");
     if (!t) {
       t = document.createElement("div");
@@ -2487,7 +2529,8 @@ kbd {
       t.setAttribute("role", "status");
       root.appendChild(t);
     }
-    t.innerHTML = `<span class="sk-toast-icon">✓</span> <span>${esc(msg)}</span>`;
+    const symbol = kind === "success" ? "✓" : kind === "error" ? "!" : "i";
+    t.innerHTML = `<span class="sk-toast-icon" aria-hidden="true">${symbol}</span> <span>${esc(msg)}</span>`;
     t.removeAttribute("data-on");
     requestAnimationFrame(() => t.setAttribute("data-on", ""));
     clearTimeout(t._h);
@@ -2727,16 +2770,31 @@ kbd {
     const text = rawText.trim();
     const lines = text.split(/\r?\n/);
 
-    // Try parsing as JSON first
-    if (text.startsWith("{") && text.endsWith("}")) {
-      try {
-        const json = JSON.parse(text);
-        if (json.flows && Array.isArray(json.flows)) {
-          return normalizeProjectJson(json);
-        }
-      } catch (e) {
-        // Not JSON, continue to heuristic parsing
+    // Structured input must be valid; never reinterpret broken JSON as a business brief.
+    if (/^[{\[]/.test(text)) {
+      let json;
+      try { json = JSON.parse(text); }
+      catch { throw new Error("JSON inválido. Corrija o arquivo ou envie uma descrição em texto."); }
+      if (!json || !Array.isArray(json.flows) || !json.flows.length || json.flows.length > 100) {
+        throw new Error("O JSON deve conter uma lista flows com 1 a 100 fluxos.");
       }
+      const ids = new Set();
+      const supported = ["auth", "form", "kanban", "table", "dashboard", "timeline", "copilot", "approval", "brief", "html"];
+      for (const f of json.flows) {
+        if (!f || typeof f.title !== "string" || !f.title.trim() ||
+            (f.id != null && (typeof f.id !== "string" || !f.id.trim())) ||
+            ["category", "sum", "description"].some(k => f[k] != null && typeof f[k] !== "string") ||
+            ["rules", "fields", "actions", "today"].some(k => f[k] != null && (!Array.isArray(f[k]) || f[k].some(v => typeof v !== "string"))) ||
+            (f.archetype && !supported.includes(f.archetype))) {
+          throw new Error("Cada fluxo precisa de título e listas de regras, campos e ações em texto.");
+        }
+        const id = f.id || `flow-${ids.size + 1}`;
+        if (ids.has(id)) throw new Error("Os identificadores dos fluxos devem ser únicos.");
+        ids.add(id);
+      }
+      const result = normalizeProjectJson(json);
+      result.rawText = typeof json.rawText === "string" ? json.rawText : text;
+      return result;
     }
 
     let title = "Pitang Labs · POC Simulator";
@@ -2873,16 +2931,9 @@ kbd {
         ? f.category
         : classifyCategory(f.title, f.sum, f.rules);
 
-      const archetype = detectArchetype(f.title, f.sum, f.rules);
+      const archetype = f.archetype || detectArchetype(f.title, f.sum, f.rules);
 
       let rules = f.rules && f.rules.length > 0 ? f.rules : [];
-      if (rules.length === 0) {
-        rules = [
-          `RN-${String(idx + 1).padStart(2, "0")}.1: Validação de dados com feedback tátil e prevenção de erros`,
-          `RN-${String(idx + 1).padStart(2, "0")}.2: Padrão de usabilidade Jakub Krehel e conformidade WCAG AA`,
-          `RN-${String(idx + 1).padStart(2, "0")}.3: Persistência de estado com registro em auditoria`
-        ];
-      }
 
       return {
         ...f,
@@ -2915,99 +2966,18 @@ kbd {
    * Helper to parse free-form / paragraph text into logical flows
    */
   function extractFlowsFromFreeText(text) {
-    const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim().length > 20);
-
-    if (paragraphs.length >= 2) {
-      return paragraphs.slice(0, 6).map((para, i) => {
-        const firstLine = para.trim().split("\n")[0].replace(/^[#*-.\s]+/, "");
-        const title = firstLine.length < 50 ? firstLine : `Etapa ${i + 1}: ${firstLine.slice(0, 45)}…`;
-        const category = classifyCategory(title, para, []);
-        const archetype = detectArchetype(title, para, []);
-
-        return {
-          id: slugify(title) || `fluxo-${i + 1}`,
-          title: title,
-          category: category,
-          archetype: archetype,
-          sum: para.trim().replace(/\n/g, " ").slice(0, 160) + (para.length > 160 ? "…" : ""),
-          rules: [
-            `RN-${String(i + 1).padStart(2, "0")}.1: Execução e validação da regra de negócio descrita no requisito`,
-            `RN-${String(i + 1).padStart(2, "0")}.2: Feedback tátil active:scale-[0.96] e isolamento de scroll`
-          ],
-          fields: [],
-          actions: []
-        };
-      });
-    }
-
-    // Default enterprise flows
-    const defaultFlowNames = [
-      {
-        title: "Acesso & Autenticação Segura",
-        sum: "Identificação do usuário, login institucional Gov.br / SSO ou acesso anônimo com criptografia.",
-        category: "01. Acesso & Autenticação",
-        archetype: "auth",
-        rules: [
-          "RN-01: Suporte a login Gov.br, SSO corporativo e opção de manifestação anônima",
-          "RN-02: Mascaramento de dados sensíveis e token de sessão seguro com timeout de 15 minutos"
-        ]
-      },
-      {
-        title: "Registro de Solicitação & Upload",
-        sum: "Formulário em etapas com validação preditiva, preenchimento assistido e upload de comprovantes.",
-        category: "02. Entrada & Registro",
-        archetype: "form",
-        rules: [
-          "RN-03: Upload de documentos (PDF, PNG, JPG) com limite de até 15MB e verificação de integridade",
-          "RN-04: Geração imediata de protocolo alfanumérico único para acompanhamento"
-        ]
-      },
-      {
-        title: "Painel de Triagem & SLA Operacional",
-        sum: "Visão kanban do analista com classificação automática por urgência e suporte de IA generativa.",
-        category: "03. Triagem & Operação",
-        archetype: "kanban",
-        rules: [
-          "RN-05: Alerta visual com temporizador tabular para casos com SLA abaixo de 4 horas",
-          "RN-06: Sugestão automática de parecer prévio por modelo de IA com validação humana obrigatória"
-        ]
-      },
-      {
-        title: "Consulta de Protocolo & Timeline",
-        sum: "Acompanhamento transparente pelo cidadão com linha do tempo de despachos e download de parecer.",
-        category: "04. Acompanhamento & Protocolo",
-        archetype: "timeline",
-        rules: [
-          "RN-07: Consulta pública por número de protocolo com proteção de sigilo",
-          "RN-08: Notificações a cada transição de status homologada"
-        ]
-      },
-      {
-        title: "Dashboard Executivo & Governança",
-        sum: "Telemetria consolidada de resolutividade, tempo médio de atendimento e conformidade legal.",
-        category: "05. Gestão, Métricas & Governança",
-        archetype: "dashboard",
-        rules: [
-          "RN-09: Apresentação de indicadores de atendimento com números tabulares e filtros por período",
-          "RN-10: Exportação de logs de auditoria em conformidade com as diretrizes do Pitang Labs"
-        ]
-      }
-    ];
-
-    return defaultFlowNames.map((item, idx) => ({
-      id: slugify(item.title),
-      title: item.title,
-      sum: item.sum,
-      category: item.category,
-      archetype: item.archetype,
-      rules: item.rules,
-      fields: [],
-      actions: []
-    }));
+    // Preserve the complete brief. A keyword matcher cannot implement arbitrary software.
+    const firstLine = text.split(/\r?\n/).find(line => line.trim()) || "Briefing recebido";
+    return [{
+      id: "briefing", title: firstLine.replace(/^#+\s*/, "").slice(0, 70),
+      category: "Briefing do projeto", archetype: "brief", sum: text,
+      rules: [], fields: [], actions: []
+    }];
   }
 
   function normalizeProjectJson(json) {
     return {
+      artifactHtml: typeof json.artifactHtml === "string" ? json.artifactHtml : "",
       title: json.title || "Pitang Labs · POC Simulator",
       summary: json.summary || "POC Simulator gerada a partir de especificação JSON",
       flows: json.flows.map((f, i) => ({
@@ -3035,6 +3005,7 @@ kbd {
   };
 });
 </script>
+<script>/*__SNAPSHOT_JS__*/</script>
 <script>/* ==========================================================================
    PITANG LABS · DEFAULT ENTERPRISE POC DEFINITION
    Comprehensive reference application: "Sistema Integrado de Atendimento,
@@ -3207,6 +3178,39 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
     const rules = flow.rules || [];
     const archetype = flow.archetype || "form";
 
+    if (archetype === "html") {
+      return [{
+        name: "Aplicação importada", rules: [], personas: [],
+        axis: "Arquivo HTML fornecido pelo usuário, executado em uma prévia isolada.",
+        tryThis: ["Execute a jornada da aplicação no centro.", "Troque o dispositivo para conferir o layout.", "Exporte o viewer para levar o HTML incorporado."],
+        motion: "Definido pela aplicação importada.",
+        tradeoff: "O isolamento bloqueia o armazenamento local da prévia. Para persistência própria, abra o arquivo original no navegador ou use a exportação de dados da aplicação. Integrações e regras não foram auditadas.",
+        render(root) {
+          const frame = document.createElement("iframe");
+          frame.className = "artifact-preview";
+          frame.title = project.title || "POC importada";
+          frame.setAttribute("sandbox", "allow-scripts allow-forms allow-modals allow-downloads");
+          frame.srcdoc = project.artifactHtml || "<p>Nenhum HTML incorporado.</p>";
+          root.replaceChildren(frame);
+          return () => frame.remove();
+        }
+      }];
+    }
+
+    if (archetype === "brief") {
+      return [{
+        name: "Briefing recebido", rules, personas: [],
+        axis: "Texto preservado para definição da jornada. Nenhum fluxo ou regra foi inventado.",
+        tryThis: ["Confira o briefing e use Requisitos & Regras para detalhar as telas."],
+        motion: "Sem animação necessária.",
+        tradeoff: "Este mapeador local não gera código com IA. A aplicação funcional precisa ser implementada pelo agente na IDE.",
+        render(root) {
+          root.innerHTML = `<div class="sk-scroll"><div class="sk-pad sk-stack"><h2>Seu briefing</h2><p class="brief-notice">Recebido para análise. Aplicação ainda não implementada.</p><p style="white-space:pre-wrap;overflow-wrap:anywhere">${window.Kit.esc(flow.sum || project.rawText || "")}</p></div></div>`;
+          return () => {};
+        }
+      }];
+    }
+
     const v1 = {
       name: "Operação Direta",
       axis: `Execução rápida e de menor atrito para ${flow.title}: ações principais em um clique, validação em tempo real e foco na tarefa.`,
@@ -3215,7 +3219,7 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
       fixes: [
         "Elimina telas intermediárias redundantes do fluxo legado",
         "Apresenta resumo em tempo real do estado da transação",
-        "Reduz tempo de execução em 60% com preenchimento assistido"
+        "Hipótese de redução de esforço; ainda não medida"
       ],
       tryThis: [
         "Interaja com os campos e acione o botão principal com escala tátil (scale 0.96)",
@@ -3230,7 +3234,7 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
     };
 
     const v2 = {
-      name: "Assistida por IA",
+      name: "Guiada (exemplo)",
       axis: `Experiência guiada em etapas para ${flow.title} com suporte de IA da Pitang: análise de contexto, validação em tempo real e prevenção ativa de erros.`,
       personas: ["analista", "solicitante"],
       rules: rules,
@@ -3273,6 +3277,15 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
       }
     };
 
+    // The access template has no distinct alternatives; do not advertise duplicate screens.
+    if (archetype === "auth") {
+      v1.name = "Acesso (exemplo)";
+      v1.axis = "Modelo visual de acesso. Integrações, bloqueio de tentativas e identidade não são verificados.";
+      v1.personas = ["solicitante"];
+      v1.tryThis = ["Esvazie os campos e confira o aviso de preenchimento.", "Experimente o retorno de simulação dos botões de acesso."];
+      v1.tradeoff = "Uma prévia visual não substitui autenticação real nem implementa as regras de segurança listadas.";
+      return [v1];
+    }
     return [v1, v2, v3];
   }
 
@@ -3355,7 +3368,7 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
               <div>
                 <div class="sk-rule-badge"><span>RN-02</span> Sigilo &amp; Criptografia</div>
                 <strong style="display:block;font-size:14px;color:var(--sk-ink);margin-top:2px">Acesso Anônimo Seguro</strong>
-                <span style="font-size:12px;color:var(--sk-ink-3)">Gera chave de consulta única sem rastreamento de IP.</span>
+                <span style="font-size:12px;color:var(--sk-ink-3)">Exemplo visual. Não cria sessão, chave criptográfica ou garantia de anonimato.</span>
               </div>
               <button class="sk-btn sk-btn-outline" id="btn-anon" style="width:auto;padding:0 16px">Entrada Anônima</button>
             </div>
@@ -3365,11 +3378,15 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
       ${tabs(flow.id)}
     `;
 
-    const un1 = K.on(root, "#btn-login, #btn-gov", "click", () => {
-      K.toast(root, "Autenticação efetuada com sucesso!");
+    const un1 = K.on(root, "#btn-login, #btn-gov", "click", (event, button) => {
+      if (button.id === "btn-login") {
+        const missing = ["#inp-email", "#inp-pass"].map(s => root.querySelector(s)).find(input => !input.value.trim());
+        if (missing) { missing.focus(); K.toast(root, "Preencha o e-mail ou CPF e a senha para experimentar o acesso.", "error"); return; }
+      }
+      K.toast(root, "Simulação de acesso. Nenhuma identidade foi validada.");
     });
     const un2 = K.on(root, "#btn-anon", "click", () => {
-      K.toast(root, "Sessão anônima iniciada (Token: PIT-ANON-9812)");
+      K.toast(root, "Exemplo de acesso anônimo. Nenhuma sessão ou chave criptográfica foi criada.");
     });
     return () => { un1(); un2(); };
   }
@@ -4246,13 +4263,21 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
   };
 
   let screen, deviceWrap, device, cleanup = null;
+  let requirementsTrigger = null;
 
   /* ---- Initialize Application ---- */
   function init() {
     // Check if user has saved custom requirements in localStorage
-    const savedRequirements = store.get("custom_requirements", null);
+    let embeddedProject = null;
+    try {
+      const snapshot = document.getElementById("poc-project-data");
+      if (snapshot) embeddedProject = window.RequirementsParser.parse(snapshot.textContent);
+    } catch (error) { console.warn("Projeto exportado inválido:", error.message); }
+    if (embeddedProject) currentProject = embeddedProject;
+    const savedRequirements = embeddedProject ? null : store.get("custom_requirements", null);
     if (savedRequirements && window.RequirementsParser) {
-      const parsed = window.RequirementsParser.parse(savedRequirements);
+      let parsed;
+      try { parsed = window.RequirementsParser.parse(savedRequirements); } catch (error) { console.warn(error.message); }
       if (parsed && parsed.flows && parsed.flows.length > 0) {
         currentProject = parsed;
       }
@@ -4298,9 +4323,37 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
       btnOpenReq.addEventListener("click", openRequirementsDrawer);
     }
 
+    const artifactInput = document.getElementById("artifact-file");
+    document.querySelector(".btn-open-artifact")?.addEventListener("click", () => artifactInput.click());
+    artifactInput?.addEventListener("change", async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        if (file.size > 5 * 1024 * 1024) throw new Error("Escolha um HTML de até 5 MB.");
+        const html = await file.text();
+        if (!/<(?:!doctype\s+html|html|body)[\s>]/i.test(html)) throw new Error("O arquivo deve conter um documento HTML.");
+        currentProject = {
+          title: file.name, artifactHtml: html, rawText: "# " + file.name + "\n\nPOC HTML importada pelo usuário.",
+          flows: [{id: "aplicacao-html", title: file.name, category: "POC importada", archetype: "html", sum: "Aplicação fornecida em arquivo HTML independente.", rules: [], fields: [], actions: []}],
+          categories: ["POC importada"], personas: {}, totalRules: 0
+        };
+        // Persist metadata as JSON so a later reload does not revert to a keyword template.
+        store.set("custom_requirements", JSON.stringify(currentProject));
+        state.selectedCategory = "all";
+        state.searchQuery = "";
+        document.querySelector(".rail-search").value = "";
+        Object.keys(registry).forEach(key => delete registry[key]);
+        window.PocGenerator.registerProjectScreens(currentProject);
+        renderCategoryChips(); renderFlowsList(); setFlow(0, 0);
+        document.querySelector("#txt-requirements").value = currentProject.rawText;
+      } catch (error) { window.Kit.toast(screen, error.message); }
+      finally { event.target.value = ""; }
+    });
+
     // Global Keyboard Navigation
     document.addEventListener("keydown", (e) => {
-      if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+      if (document.querySelector(".req-drawer[data-open]")) return;
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable || e.target.closest("#screen")) return;
       if (e.metaKey || e.ctrlKey) {
         if (e.key === "k" || e.key === "K") {
           e.preventDefault();
@@ -4358,14 +4411,14 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
       return `<button class="cat-chip" data-category="${esc(cat)}" aria-pressed="${pressed}">${esc(label)}</button>`;
     }).join("");
 
-    wrap.addEventListener("click", (e) => {
+    wrap.onclick = (e) => {
       const b = e.target.closest(".cat-chip");
       if (b) {
         state.selectedCategory = b.dataset.category;
         renderCategoryChips();
         renderFlowsList();
       }
-    });
+    };
   }
 
   /* ---- Search Listener ---- */
@@ -4676,7 +4729,7 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
     if (state.inspector === "on") {
       const scoreBadge = document.createElement("div");
       scoreBadge.className = "jakub-score-pill";
-      scoreBadge.innerHTML = `Jakub Craft: <span>100/100 · WCAG AA</span>`;
+      scoreBadge.innerHTML = `Inspeção visual: <span>conformidade não verificada</span>`;
       screen.appendChild(scoreBadge);
     }
 
@@ -4704,8 +4757,8 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
       <!-- Regras de Negócio Mapeadas -->
       <section class="n-block">
         <h3 class="n-h">
-          <span>Regras de Negócio Envolvidas</span>
-          <span style="color:var(--accent);font-size:11px">${(curVersion.rules || []).length}&nbsp;Atendidas</span>
+          <span>Requisitos do briefing</span>
+          <span style="color:var(--accent);font-size:11px">${(curVersion.rules || []).length}&nbsp;Mapeados</span>
         </h3>
         <div class="n-rules-list">
           ${(curVersion.rules || currentFlow.rules || []).map((r) => {
@@ -4728,9 +4781,9 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
         <p class="n-axis">${esc(curVersion.axis)}</p>
       </section>
 
-      <!-- Personas Atendidas -->
+      <!-- Perfis de exemplo -->
       <section class="n-block">
-        <h3 class="n-h">Personas Atendidas</h3>
+        <h3 class="n-h">Perfis de exemplo</h3>
         <div class="personas">
           ${(curVersion.personas || []).map((pId) => {
             const p = personas[pId] || { name: pId, ini: pId.charAt(0).toUpperCase(), color: "#ED1C24" };
@@ -4764,17 +4817,9 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
         <p class="n-axis" style="font-size:13px;color:var(--ink-2)">${esc(curVersion.tradeoff)}</p>
       </section>
 
-      <!-- Checklist de Usabilidade Jakub -->
       <section class="n-block">
-        <h3 class="n-h">Jakub Krehel Usability Audit</h3>
-        <div class="jakub-audit-box">
-          <div class="audit-item"><span class="audit-check">✓</span> <span>Raios concêntricos ($R_{ext} = R_{int} + P$)</span></div>
-          <div class="audit-item"><span class="audit-check">✓</span> <span>Escala tátil active:scale-[0.96]</span></div>
-          <div class="audit-item"><span class="audit-check">✓</span> <span>Números tabulares em SLAs e métricas</span></div>
-          <div class="audit-item"><span class="audit-check">✓</span> <span>Área de toque mínima &ge; 44px / 40px</span></div>
-          <div class="audit-item"><span class="audit-check">✓</span> <span>Contraste visual WCAG AA &ge; 4.5:1</span></div>
-          <div class="audit-item"><span class="audit-check">✓</span> <span>Scroll isolado (overscroll-behavior: contain)</span></div>
-        </div>
+        <h3 class="n-h">Verificação pendente</h3>
+        <p class="n-axis">Os requisitos acima foram mapeados, não testados. Valide as interações, regras, teclado e contraste antes de aprovar esta prévia.</p>
       </section>
     `;
 
@@ -5072,6 +5117,8 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
 
     const drawer = document.createElement("div");
     drawer.className = "req-drawer";
+    drawer.hidden = true;
+    drawer.inert = true;
     drawer.setAttribute("role", "dialog");
     drawer.setAttribute("aria-modal", "true");
     drawer.setAttribute("aria-label", "Editor de Requisitos & Simulador");
@@ -5080,7 +5127,7 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
       <div class="req-drawer-h">
         <div>
           <h2>Simulador de POC · Requisitos</h2>
-          <span style="font-size:12px;color:var(--ink-3)">Cole os requisitos em texto (qualquer formato) para mapear fluxos e regras.</span>
+          <span style="font-size:12px;color:var(--ink-3)">Cole uma descrição livre ou use títulos como “### Fluxo: Nome”. Modelos são exemplos, não uma aplicação gerada por IA.</span>
         </div>
         <button class="sk-ic req-close-btn" aria-label="Fechar gaveta">&times;</button>
       </div>
@@ -5110,6 +5157,7 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
         </div>
       </div>
 
+      <p class="req-error" id="req-error" role="alert" hidden></p>
       <div class="req-drawer-f">
         <button class="btn-export-html" id="btn-export-md" title="Baixar especificação em Markdown">
           Baixar PRD (.md)
@@ -5119,7 +5167,7 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
         </button>
         <button class="btn-simulate-now" id="btn-run-simulation">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          Simular POC em Tempo Real
+          Atualizar prévia
         </button>
       </div>
     `;
@@ -5142,28 +5190,45 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
 
     // Run Simulation
     drawer.querySelector("#btn-run-simulation").addEventListener("click", () => {
-      const text = txtArea.value.trim();
-      if (!text) {
-        alert("Por favor, informe os requisitos antes de simular.");
-        return;
+      const errorEl = drawer.querySelector("#req-error");
+      errorEl.hidden = true;
+      try {
+        const text = txtArea.value.trim();
+        if (!text) throw new Error("Descreva seu projeto antes de atualizar a prévia.");
+        const parsed = currentProject.artifactHtml && text === currentProject.rawText ? currentProject : window.RequirementsParser.parse(text);
+        if (!parsed?.flows?.length) throw new Error("Nenhum fluxo foi encontrado. Revise o texto informado.");
+        currentProject = parsed;
+        state.selectedCategory = "all";
+        state.searchQuery = "";
+        document.querySelector(".rail-search").value = "";
+        store.set("custom_requirements", text);
+        Object.keys(registry).forEach(key => delete registry[key]);
+        window.PocGenerator.registerProjectScreens(currentProject);
+        renderCategoryChips();
+        renderFlowsList();
+        setFlow(0, 0);
+        closeRequirementsDrawer();
+        window.Kit.toast(screen, `${parsed.flows.length} fluxo(s) mapeado(s). Implementação e verificação pendentes.`);
+      } catch (error) {
+        errorEl.textContent = error.message || "Não foi possível ler os requisitos. Revise o texto e tente novamente.";
+        errorEl.hidden = false;
+        txtArea.setAttribute("aria-invalid", "true");
+        txtArea.focus();
       }
-
-      if (window.RequirementsParser && window.PocGenerator) {
-        const parsed = window.RequirementsParser.parse(text);
-        if (parsed && parsed.flows && parsed.flows.length > 0) {
-          currentProject = parsed;
-          store.set("custom_requirements", text);
-          window.PocGenerator.registerProjectScreens(currentProject);
-
-          renderCategoryChips();
-          renderFlowsList();
-          setFlow(0, 0);
-          closeRequirementsDrawer();
-
-          const toastMsg = `POC simulada com sucesso! ${parsed.flows.length} fluxos mapeados em ${parsed.categories.length} categorias.`;
-          window.Kit.toast(screen, toastMsg);
-        }
+    });
+    txtArea.addEventListener("input", () => {
+      txtArea.removeAttribute("aria-invalid");
+      drawer.querySelector("#req-error").hidden = true;
+    });
+    drawer.addEventListener("keydown", event => {
+      if (event.key === "Escape" || ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k")) {
+        event.preventDefault(); event.stopPropagation(); closeRequirementsDrawer(); return;
       }
+      if (event.key !== "Tab") return;
+      const focusable = [...drawer.querySelectorAll('button:not([disabled]), textarea, input:not([type="file"])')].filter(el => el.getClientRects().length);
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     });
 
     // File input trigger
@@ -5214,6 +5279,10 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
     const scrim = document.querySelector(".req-drawer-scrim");
     const drawer = document.querySelector(".req-drawer");
     if (scrim && drawer) {
+      requirementsTrigger = document.activeElement;
+      drawer.hidden = false;
+      drawer.inert = false;
+      document.querySelector(".app").inert = true;
       scrim.setAttribute("data-open", "");
       drawer.setAttribute("data-open", "");
       const txt = drawer.querySelector("#txt-requirements");
@@ -5225,6 +5294,11 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
     const scrim = document.querySelector(".req-drawer-scrim");
     const drawer = document.querySelector(".req-drawer");
     if (scrim && drawer) {
+      const wasOpen = drawer.hasAttribute("data-open");
+      drawer.hidden = true;
+      drawer.inert = true;
+      document.querySelector(".app").inert = false;
+      if (wasOpen && requirementsTrigger?.isConnected) requirementsTrigger.focus();
       scrim.removeAttribute("data-open");
       drawer.removeAttribute("data-open");
     }
@@ -5241,7 +5315,20 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
 
   /* ---- Export Standalone HTML Feature ---- */
   function exportStandaloneHtml() {
-    const docHtml = document.documentElement.outerHTML;
+    const copy = document.documentElement.cloneNode(true);
+    // Export a clean shell: runtime widgets are reconstructed on load.
+    // Keeping their cloned markup would duplicate IDs and lose their event handlers.
+    copy.querySelectorAll("#poc-project-data, .req-drawer, .req-drawer-scrim, .proto-picker, .pop, .tour").forEach(node => node.remove());
+    const snapshot = document.createElement("script");
+    snapshot.id = "poc-project-data";
+    snapshot.type = "application/json";
+    snapshot.textContent = window.PocSnapshot.serialize(currentProject);
+    copy.querySelector("head").appendChild(snapshot);
+    copy.querySelector(".app")?.removeAttribute("inert");
+    const drawer = copy.querySelector(".req-drawer");
+    if (drawer) { drawer.hidden = true; drawer.setAttribute("inert", ""); drawer.removeAttribute("data-open"); }
+    copy.querySelector(".req-drawer-scrim")?.removeAttribute("data-open");
+    const docHtml = "<!doctype html>\n" + copy.outerHTML;
     const blob = new Blob([docHtml], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -5262,6 +5349,8 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
         .then((r) => r.json())
         .then((data) => {
           if (initialVersion && initialVersion !== data.version) {
+            // Preserve edits while the developer changes source files in the IDE.
+            if (document.querySelector(".req-drawer[data-open]")) return;
             location.reload();
           }
           if (!initialVersion) initialVersion = data.version;
@@ -5303,7 +5392,7 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
       target: () => document.querySelector(".btn-open-requirements"),
       place: "right",
       title: "1. Requisitos na IDE ou no Browser",
-      body: () => `Clique aqui (ou pressione <kbd>⌘K</kbd> / <kbd>Ctrl+K</kbd>) para colar ou editar seus requisitos de negócio em qualquer formato (Markdown, Histórias de Usuário, Gherkin ou texto livre). O simulador mapeará automaticamente os fluxos e regras em tempo real!`,
+      body: () => `Clique aqui (ou pressione <kbd>⌘K</kbd> / <kbd>Ctrl+K</kbd>) para colar ou editar seus requisitos de negócio em qualquer formato (Markdown, Histórias de Usuário, Gherkin ou texto livre). O texto livre é preservado como briefing; títulos de fluxos permitem explorar modelos de interface.`,
     },
     {
       target: () => document.querySelector(".flows-container"),
@@ -5315,13 +5404,13 @@ window.DefaultPoc = {"title": "Pitang Labs · Portal de Ouvidoria & Atendimento 
       target: () => document.querySelector(".proto-picker"),
       place: "top",
       title: "3. Três Direções de Design por Fluxo",
-      body: () => `Cada fluxo conta com 3 abordagens distintas: <strong>Direta</strong>, <strong>Assistida por IA</strong> e <strong>Analítica</strong>. Alterne com um clique ou pelas teclas <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>. Use também os seletores de dispositivo (iOS · Android · Web).`,
+      body: () => `Quando disponíveis, compare as abordagens: <strong>Direta</strong>, <strong>Guiada (exemplo)</strong> e <strong>Analítica</strong>. Alterne com um clique ou pelas teclas <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>. Use também os seletores de dispositivo (iOS · Android · Web).`,
     },
     {
       target: () => document.querySelector(".notes"),
       place: "left",
       title: "4. Racional, Regras & Usabilidade Jakub",
-      body: () => `Aqui você confere as regras de negócio validadas pela tela, as personas atendidas, ações interativas testáveis no protótipo e o checklist de conformidade com as diretrizes de design engineering de Jakub Krehel.`,
+      body: () => `Aqui você confere as requisitos mapeados para a tela, as personas atendidas, ações interativas testáveis no protótipo e o orientações para verificação com as diretrizes de design engineering de Jakub Krehel.`,
     },
   ];
 

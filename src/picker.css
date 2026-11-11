@@ -119,6 +119,15 @@
     position: sticky;
     bottom: 12px;
     align-self: center;
+    left: auto;
+    transform: none;
+    width: max-content;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    border-radius: 18px;
     margin: 14px 0;
   }
 }
+
+@media (max-width: 760px) { .proto-picker-item, .proto-picker-replay { min-height: 40px; } }

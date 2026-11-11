@@ -9,7 +9,7 @@
   --panel: #FFFFFF;
   --ink: #0A0D14;
   --ink-2: #484F5D;
-  --ink-3: #7A8497;
+  --ink-3: #596579;
   --line: rgba(10, 13, 20, 0.08);
   --line-2: rgba(10, 13, 20, 0.16);
   --tint: rgba(10, 13, 20, 0.04);
@@ -921,3 +921,33 @@ kbd {
     width: 100vw;
   }
 }
+
+/* Usable editor and honest preview status, including narrow viewports. */
+[hidden] { display: none !important; }
+.preview-disclaimer { color: var(--ink-2); font-size: 12px; line-height: 1.5; margin: 8px 0 0; }
+.req-error { color: var(--ink); background: var(--accent-surface); padding: 12px 20px; margin: 0; border-block: 1px solid var(--line); font-size: 13px; }
+.req-drawer { overflow: hidden; max-height: 100dvh; }
+.req-drawer-h { flex-shrink: 0; gap: 12px; }
+.req-drawer-h > div { min-width: 0; }
+.req-drawer-b { min-height: 0; }
+.req-drawer-b > div, .req-drawer-presets { min-width: 0; }
+.req-drawer-presets > .sk-row { flex-wrap: wrap; gap: 10px; }
+.req-drawer-f { flex-shrink: 0; flex-wrap: wrap; }
+.req-drawer-f button { min-height: 44px; height: auto; white-space: normal; padding: 10px 12px; }
+.req-textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.brief-notice { padding: 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink-2); }
+@media (max-width: 760px) {
+  .req-drawer { width: 100%; max-width: 100%; }
+  .req-drawer-h, .req-drawer-b, .req-drawer-f { padding: 16px; }
+  .req-drawer-f > button { flex: 1 1 100%; }
+  .req-presets-row { flex-wrap: wrap; overflow: visible; }
+  .preset-btn { white-space: normal; min-height: 40px; }
+  .req-textarea { min-height: 180px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .req-drawer, .req-drawer-scrim { transition: none; }
+}
+
+.btn-open-artifact { display: block; width: 100%; min-height: 44px; padding: 10px 14px; margin-top: 10px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--panel); color: var(--ink); font: 600 13px var(--f-ui); cursor: pointer; }
+.btn-open-artifact:hover { background: var(--tint); }
+.artifact-preview { display: block; width: 100%; height: 100%; border: 0; background: white; }

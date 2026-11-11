@@ -85,6 +85,52 @@ try {
   failed++;
 }
 
+// Regression coverage: preserve input, reject broken structured data and export safely.
+{
+  const load = relative => {
+    const code = fs.readFileSync(path.join(ROOT, relative), "utf-8");
+    const module = { exports: {} };
+    new Function("module", "exports", code)(module, module.exports);
+    return module.exports;
+  };
+  const Parser = load("src/simulator/parser.js");
+  const Snapshot = load("src/simulator/snapshot.js");
+  const brief = "Quero reservar salas, com data e horário. Não precisa de login. Impedir reservas sobrepostas.";
+  const project = Parser.parse(brief);
+  assert("Texto livre preserva o briefing completo", project.flows.length === 1 && project.flows[0].sum === brief);
+  assert("Texto livre não inventa autenticação ou regras", project.flows[0].archetype === "brief" && project.totalRules === 0);
+  const longBrief = Array.from({length: 8}, (_, i) => `Parágrafo ${i}: requisitos e restrições específicos do projeto.`).join("\n\n");
+  assert("Briefing extenso não perde parágrafos", Parser.parse(longBrief).flows[0].sum === longBrief);
+  const missingRules = Parser.parse("# Projeto\n### Fluxo: Reserva\nDescrição do fluxo");
+  assert("Fluxo sem regras não recebe regras inventadas", missingRules.flows[0].rules.length === 0);
+  const invalid = ["{broken", "[]", '{"flows":[]}', '{"flows":[null]}', '{"flows":[{"title":"Teste","rules":"inválido"}]}', '{"flows":[{"id":"x","title":"A"},{"id":"x","title":"B"}]}'];
+  assert("Entradas estruturadas inválidas geram erro recuperável", invalid.every(text => { try { Parser.parse(text); return false; } catch { return true; } }));
+  const hostile = Parser.parse("Texto com </script><script>alert(1)</script> e & caracteres.");
+  const serialized = Snapshot.serialize(hostile);
+  assert("Projeto exportado não encerra o script de metadados", !serialized.includes("<") && !serialized.includes(">"));
+  assert("Exportação preserva texto e regras sem depender do storage", JSON.parse(serialized).rawText === hostile.rawText && Parser.parse(serialized).flows[0].sum === hostile.flows[0].sum);
+  const imported = { title: "Uma aplicação", artifactHtml: "<!doctype html><html><script>const n = 1;</script><body>Aplicação</body></html>", flows: [{ id: "html", title: "Aplicação", archetype: "html", rules: [] }] };
+  const restored = Parser.parse(Snapshot.serialize(imported));
+  assert("HTML incorporado sobrevive à serialização e à leitura do projeto", restored.artifactHtml === imported.artifactHtml && restored.flows[0].archetype === "html");
+  const Generator = load("src/simulator/generator.js");
+  const registrations = {};
+  globalThis.window = {Proto: {versions(id, versions) { registrations[id] = versions; }}};
+  try {
+    Generator.registerProjectScreens(project);
+    Generator.registerProjectScreens(Parser.parse('{"flows":[{"id":"login","title":"Login","archetype":"auth"}]}'));
+    assert("Briefing tem uma única direção e não finge implementar a aplicação", registrations.briefing.length === 1);
+    assert("Acesso sem alternativas distintas não repete três telas", registrations.login.length === 1);
+    Generator.registerProjectScreens(restored);
+    const nodes = [];
+    globalThis.document = {createElement(tag) { return {tag, setAttribute(k, v) {this[k] = v;}, remove() {this.removed = true;}}; }};
+    try {
+      const cleanup = registrations.html[0].render({replaceChildren(node) {nodes.push(node);}});
+      assert("Prévia HTML mantém scripts isolados da origem do viewer", nodes[0].tag === "iframe" && nodes[0].sandbox.includes("allow-scripts") && !nodes[0].sandbox.includes("allow-same-origin"));
+      assert("Prévia recebe o HTML integral e limpa seu frame ao desmontar", nodes[0].srcdoc === imported.artifactHtml && (cleanup(), nodes[0].removed));
+    } finally { delete globalThis.document; }
+  } finally { delete globalThis.window; }
+}
+
 // 3. Example Files Verification
 assert("exemplo-ouvidoria-pitang.md existe", fs.existsSync(path.join(ROOT, "requirements", "exemplo-ouvidoria-pitang.md")));
 assert("exemplo-portal-ags-compliance.md existe", fs.existsSync(path.join(ROOT, "requirements", "exemplo-portal-ags-compliance.md")));

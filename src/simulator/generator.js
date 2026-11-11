@@ -27,6 +27,39 @@
     const rules = flow.rules || [];
     const archetype = flow.archetype || "form";
 
+    if (archetype === "html") {
+      return [{
+        name: "Aplicação importada", rules: [], personas: [],
+        axis: "Arquivo HTML fornecido pelo usuário, executado em uma prévia isolada.",
+        tryThis: ["Execute a jornada da aplicação no centro.", "Troque o dispositivo para conferir o layout.", "Exporte o viewer para levar o HTML incorporado."],
+        motion: "Definido pela aplicação importada.",
+        tradeoff: "O isolamento bloqueia o armazenamento local da prévia. Para persistência própria, abra o arquivo original no navegador ou use a exportação de dados da aplicação. Integrações e regras não foram auditadas.",
+        render(root) {
+          const frame = document.createElement("iframe");
+          frame.className = "artifact-preview";
+          frame.title = project.title || "POC importada";
+          frame.setAttribute("sandbox", "allow-scripts allow-forms allow-modals allow-downloads");
+          frame.srcdoc = project.artifactHtml || "<p>Nenhum HTML incorporado.</p>";
+          root.replaceChildren(frame);
+          return () => frame.remove();
+        }
+      }];
+    }
+
+    if (archetype === "brief") {
+      return [{
+        name: "Briefing recebido", rules, personas: [],
+        axis: "Texto preservado para definição da jornada. Nenhum fluxo ou regra foi inventado.",
+        tryThis: ["Confira o briefing e use Requisitos & Regras para detalhar as telas."],
+        motion: "Sem animação necessária.",
+        tradeoff: "Este mapeador local não gera código com IA. A aplicação funcional precisa ser implementada pelo agente na IDE.",
+        render(root) {
+          root.innerHTML = `<div class="sk-scroll"><div class="sk-pad sk-stack"><h2>Seu briefing</h2><p class="brief-notice">Recebido para análise. Aplicação ainda não implementada.</p><p style="white-space:pre-wrap;overflow-wrap:anywhere">${window.Kit.esc(flow.sum || project.rawText || "")}</p></div></div>`;
+          return () => {};
+        }
+      }];
+    }
+
     const v1 = {
       name: "Operação Direta",
       axis: `Execução rápida e de menor atrito para ${flow.title}: ações principais em um clique, validação em tempo real e foco na tarefa.`,
@@ -35,7 +68,7 @@
       fixes: [
         "Elimina telas intermediárias redundantes do fluxo legado",
         "Apresenta resumo em tempo real do estado da transação",
-        "Reduz tempo de execução em 60% com preenchimento assistido"
+        "Hipótese de redução de esforço; ainda não medida"
       ],
       tryThis: [
         "Interaja com os campos e acione o botão principal com escala tátil (scale 0.96)",
@@ -50,7 +83,7 @@
     };
 
     const v2 = {
-      name: "Assistida por IA",
+      name: "Guiada (exemplo)",
       axis: `Experiência guiada em etapas para ${flow.title} com suporte de IA da Pitang: análise de contexto, validação em tempo real e prevenção ativa de erros.`,
       personas: ["analista", "solicitante"],
       rules: rules,
@@ -93,6 +126,15 @@
       }
     };
 
+    // The access template has no distinct alternatives; do not advertise duplicate screens.
+    if (archetype === "auth") {
+      v1.name = "Acesso (exemplo)";
+      v1.axis = "Modelo visual de acesso. Integrações, bloqueio de tentativas e identidade não são verificados.";
+      v1.personas = ["solicitante"];
+      v1.tryThis = ["Esvazie os campos e confira o aviso de preenchimento.", "Experimente o retorno de simulação dos botões de acesso."];
+      v1.tradeoff = "Uma prévia visual não substitui autenticação real nem implementa as regras de segurança listadas.";
+      return [v1];
+    }
     return [v1, v2, v3];
   }
 
@@ -175,7 +217,7 @@
               <div>
                 <div class="sk-rule-badge"><span>RN-02</span> Sigilo &amp; Criptografia</div>
                 <strong style="display:block;font-size:14px;color:var(--sk-ink);margin-top:2px">Acesso Anônimo Seguro</strong>
-                <span style="font-size:12px;color:var(--sk-ink-3)">Gera chave de consulta única sem rastreamento de IP.</span>
+                <span style="font-size:12px;color:var(--sk-ink-3)">Exemplo visual. Não cria sessão, chave criptográfica ou garantia de anonimato.</span>
               </div>
               <button class="sk-btn sk-btn-outline" id="btn-anon" style="width:auto;padding:0 16px">Entrada Anônima</button>
             </div>
@@ -185,11 +227,15 @@
       ${tabs(flow.id)}
     `;
 
-    const un1 = K.on(root, "#btn-login, #btn-gov", "click", () => {
-      K.toast(root, "Autenticação efetuada com sucesso!");
+    const un1 = K.on(root, "#btn-login, #btn-gov", "click", (event, button) => {
+      if (button.id === "btn-login") {
+        const missing = ["#inp-email", "#inp-pass"].map(s => root.querySelector(s)).find(input => !input.value.trim());
+        if (missing) { missing.focus(); K.toast(root, "Preencha o e-mail ou CPF e a senha para experimentar o acesso.", "error"); return; }
+      }
+      K.toast(root, "Simulação de acesso. Nenhuma identidade foi validada.");
     });
     const un2 = K.on(root, "#btn-anon", "click", () => {
-      K.toast(root, "Sessão anônima iniciada (Token: PIT-ANON-9812)");
+      K.toast(root, "Exemplo de acesso anônimo. Nenhuma sessão ou chave criptográfica foi criada.");
     });
     return () => { un1(); un2(); };
   }

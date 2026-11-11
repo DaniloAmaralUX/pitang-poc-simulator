@@ -19,7 +19,7 @@
       target: () => document.querySelector(".btn-open-requirements"),
       place: "right",
       title: "1. Requisitos na IDE ou no Browser",
-      body: () => `Clique aqui (ou pressione <kbd>⌘K</kbd> / <kbd>Ctrl+K</kbd>) para colar ou editar seus requisitos de negócio em qualquer formato (Markdown, Histórias de Usuário, Gherkin ou texto livre). O simulador mapeará automaticamente os fluxos e regras em tempo real!`,
+      body: () => `Clique aqui (ou pressione <kbd>⌘K</kbd> / <kbd>Ctrl+K</kbd>) para colar ou editar seus requisitos de negócio em qualquer formato (Markdown, Histórias de Usuário, Gherkin ou texto livre). O texto livre é preservado como briefing; títulos de fluxos permitem explorar modelos de interface.`,
     },
     {
       target: () => document.querySelector(".flows-container"),
@@ -31,13 +31,13 @@
       target: () => document.querySelector(".proto-picker"),
       place: "top",
       title: "3. Três Direções de Design por Fluxo",
-      body: () => `Cada fluxo conta com 3 abordagens distintas: <strong>Direta</strong>, <strong>Assistida por IA</strong> e <strong>Analítica</strong>. Alterne com um clique ou pelas teclas <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>. Use também os seletores de dispositivo (iOS · Android · Web).`,
+      body: () => `Quando disponíveis, compare as abordagens: <strong>Direta</strong>, <strong>Guiada (exemplo)</strong> e <strong>Analítica</strong>. Alterne com um clique ou pelas teclas <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>. Use também os seletores de dispositivo (iOS · Android · Web).`,
     },
     {
       target: () => document.querySelector(".notes"),
       place: "left",
       title: "4. Racional, Regras & Usabilidade Jakub",
-      body: () => `Aqui você confere as regras de negócio validadas pela tela, as personas atendidas, ações interativas testáveis no protótipo e o checklist de conformidade com as diretrizes de design engineering de Jakub Krehel.`,
+      body: () => `Aqui você confere as requisitos mapeados para a tela, as personas atendidas, ações interativas testáveis no protótipo e o orientações para verificação com as diretrizes de design engineering de Jakub Krehel.`,
     },
   ];
 

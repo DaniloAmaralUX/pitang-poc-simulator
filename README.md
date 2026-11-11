@@ -2,7 +2,9 @@
 
 > **Simulador de POCs e Protótipos Interativos orientados a Requisitos de Negócio e Engenharia de Usabilidade (Jakub Krehel & Pitang Labs).**
 
-O **Pitang Labs · Simulador de POC** transforma especificações de requisitos textuais da sua IDE (em qualquer formato: Markdown, Histórias de Usuário, Gherkin BDD, bullet points ou texto livre) em um visualizador de protótipos completo, autocontido em um único arquivo HTML, com fluxos mapeados por categorias de negócio, protótipos interativos em 3 plataformas (iOS, Android e Web) e 3 direções de design por fluxo, com validação estrita de usabilidade baseada nas heurísticas de Jakub Krehel e identidade visual oficial do Pitang Labs.
+O **Pitang Labs · Simulador de POC** organiza requisitos e apresenta modelos de interface em molduras iOS, Android e Web. Texto livre é preservado como briefing; fluxos estruturados podem ser explorados com modelos. A quantidade de direções depende do modelo disponível. Regras mapeadas e orientações de usabilidade não representam validação automática.
+
+Use **Abrir POC HTML** para visualizar uma aplicação funcional criada pelo agente na IDE. O viewer incorpora esse HTML ao exportar o projeto. A ferramenta local não executa um modelo de IA para gerar aplicações a partir do texto.
 
 ---
 
@@ -169,3 +171,15 @@ Acesse `http://localhost:3000` na visualização interna da sua IDE (Simple Brow
 - Seletor de versões adaptado do design de Emil Kowalski.
 - Princípios de Design Engineering formulados por Jakub Krehel e Vercel Interface Guidelines.
 - Licença: MIT.
+
+## Limites e verificação da prévia
+
+O editor local organiza briefings e apresenta modelos; não executa um agente de IA nem implementa automaticamente todas as regras do texto. Texto livre é preservado como briefing. Use títulos `### Fluxo: Nome` para mapear fluxos explícitos, ou JSON com `flows`. JSON inválido mantém o projeto anterior e mostra orientação para correção.
+
+Requisitos mapeados não significam requisitos verificados. Integrações e dados dos modelos são exemplos. Acesso tem uma única direção porque o modelo não oferece três implementações distintas. A exportação inclui os dados do projeto atual, inclusive ao abrir em outro navegador.
+
+Verificação: `python scripts/build.py` e `node scripts/test.mjs`. A suíte inclui regressões de fidelidade do texto, JSON inválido, exportação segura e quantidade de alternativas.
+
+### Visualizar um HTML funcional
+
+Use **Abrir POC HTML** para carregar o arquivo gerado pelo agente na IDE (até 5 MB). A aplicação é exibida em iframe isolado, com as molduras do viewer. O arquivo é incorporado na exportação e lembrado localmente quando o armazenamento permitir. O isolamento bloqueia localStorage dentro da prévia; use o HTML original ou a exportação de dados da própria aplicação para reter dados. A moldura não converte uma aplicação web em um app nativo.
