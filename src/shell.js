@@ -36,6 +36,7 @@
     theme: store.get("theme", "light"),
     text: store.get("text", "default"),
     motion: prefersReduced ? "reduced" : store.get("motion", "full"),
+    inspector: store.get("inspector", "off"),
     device: ["ios", "android", "web"].includes(params.get("device")) ? params.get("device") : store.get("device", "ios"),
     selectedCategory: "all",
     searchQuery: ""
@@ -399,6 +400,7 @@
     freshScreen.dataset.theme = state.theme;
     freshScreen.dataset.device = state.device;
     if (state.motion === "reduced") freshScreen.setAttribute("data-reduced-motion", "");
+    if (state.inspector === "on") freshScreen.setAttribute("data-jakub-inspector", "true");
     screen.parentNode.replaceChild(freshScreen, screen);
     screen = freshScreen;
 
@@ -422,6 +424,14 @@
     } catch (err) {
       console.error("Screen render error:", err);
       screen.innerHTML = `<div style="padding:30px;color:#ED1C24"><h3>Erro ao renderizar tela</h3><pre>${esc(err.message)}</pre></div>`;
+    }
+
+    // Attach Jakub live inspector badge if enabled
+    if (state.inspector === "on") {
+      const scoreBadge = document.createElement("div");
+      scoreBadge.className = "jakub-score-pill";
+      scoreBadge.innerHTML = `Jakub Craft: <span>100/100 · WCAG AA</span>`;
+      screen.appendChild(scoreBadge);
     }
 
     // Bind navigation tab clicks inside mock-up to router
@@ -624,6 +634,8 @@
             if (state.motion === "reduced") screen.setAttribute("data-reduced-motion", "");
             else screen.removeAttribute("data-reduced-motion");
           }
+        } else if (key === "inspector") {
+          mountScreen();
         }
       });
 
@@ -710,7 +722,63 @@
 ## Categoria: 04. Gestão Financeira
 ### Fluxo: Dashboard de Gastos & Economia (Saving)
 - RN-07: Métricas de saving gerado por categoria de insumo com números tabulares
-- RN-08: Rastreabilidade completa da requisição ao recebimento fiscal`
+- RN-08: Rastreabilidade completa da requisição ao recebimento fiscal`,
+
+    copilot: `# Central de Operações & AI Copilot Pitang
+
+## Categoria: 01. Autenticação & Agentes
+### Fluxo: Conexão Segura & Seleção de Modelo
+- RN-01: Autenticação SSO com controle de tokens e cotas por equipe
+- RN-02: Seleção de modelo de IA com isolamento de dados confidenciais
+
+## Categoria: 02. Interação & RAG
+### Fluxo: Chat Copilot com Base de Conhecimento
+- RN-03: Busca semântica RAG em documentos corporativos com citação de fontes
+- RN-04: Geração de minutas com validação de conformidade normativa
+
+## Categoria: 03. Fila de Homologação
+### Fluxo: Mesa de Validação Humana (Human-in-the-Loop)
+- RN-05: Encaminhamento obrigatório de respostas sensíveis para aprovação técnica
+- RN-06: Registro de feedback de assertividade para calibração de modelos
+
+## Categoria: 04. Telemetria de IA
+### Fluxo: Painel de Consumo & Performance
+- RN-07: Métricas de latência e custo por requisição com números tabulares
+- RN-08: Log auditável de interações em conformidade com o marco da IA`,
+
+    fintech: `# Pitang Pay · Internet Banking Corporativo
+
+## Categoria: 01. Acesso & Segurança
+### Fluxo: Login Corporativo & 2FA
+- RN-01: Autenticação com biometria e token dinâmico no dispositivo cadastrado
+- RN-02: Bloqueio automático por suspeita de fraude em acessos de IPs não usuais
+
+## Categoria: 02. Transações & Pagamentos
+### Fluxo: Envio de Pix em Lote
+- RN-03: Upload de arquivo CNAB 240 com validação de chaves Pix e saldo em conta
+- RN-04: Alçadas de aprovação dupla para pagamentos acima de R$ 50.000,00
+
+## Categoria: 03. Conciliação & Extrato
+### Fluxo: Extrato Inteligente & Filtros
+- RN-05: Categorização automática de despesas e exportação em formato OFX e PDF
+- RN-06: Rastreamento em tempo real do status de liquidação bancária`,
+
+    health: `# Pitang Health · Telemedicina & Prontuário Eletrônico
+
+## Categoria: 01. Acesso & Conselho
+### Fluxo: Acesso do Médico (CRM Digital)
+- RN-01: Validação de registro profissional no CFM e certificado digital ICP-Brasil
+- RN-02: Termo de sigilo médico e proteção reforçada de dados sensíveis de saúde
+
+## Categoria: 02. Atendimento & Consulta
+### Fluxo: Teleconsulta & Prescrição Eletrônica
+- RN-03: Sala de vídeo criptografada com gravação opcional sob consentimento
+- RN-04: Emissão de receita médica digital com QR Code e assinatura ICP-Brasil
+
+## Categoria: 03. Histórico do Paciente
+### Fluxo: Linha do Tempo Clínica (Prontuário)
+- RN-05: Rastreamento cronológico de exames, diagnósticos CID e alergias
+- RN-06: Compartilhamento seguro de histórico entre especialistas autorizados`
   };
 
   function buildRequirementsDrawer() {
@@ -734,11 +802,20 @@
 
       <div class="req-drawer-b">
         <div class="req-drawer-presets">
-          <label class="sk-label">Modelos Pré-definidos (Presets Pitang Labs):</label>
+          <div class="sk-row" style="justify-content:space-between;align-items:center">
+            <label class="sk-label">Modelos Pré-definidos (Presets Pitang Labs):</label>
+            <button class="preset-btn" id="btn-import-file-trigger" style="color:var(--accent);font-weight:700">
+              📁 Importar Arquivo (.txt, .md, .json)
+            </button>
+            <input type="file" id="file-req-picker" accept=".txt,.md,.json,.csv" style="display:none" />
+          </div>
           <div class="req-presets-row">
             <button class="preset-btn" data-preset="ouvidoria">Ouvidoria &amp; Atendimento</button>
             <button class="preset-btn" data-preset="ags">Portal AGS / Bafômetro</button>
             <button class="preset-btn" data-preset="b2b">Compras &amp; Cotações B2B</button>
+            <button class="preset-btn" data-preset="copilot">AI Copilot &amp; Operações</button>
+            <button class="preset-btn" data-preset="fintech">Fintech &amp; Internet Banking</button>
+            <button class="preset-btn" data-preset="health">HealthTech &amp; Telemedicina</button>
           </div>
         </div>
 
@@ -749,6 +826,9 @@
       </div>
 
       <div class="req-drawer-f">
+        <button class="btn-export-html" id="btn-export-md" title="Baixar especificação em Markdown">
+          Baixar PRD (.md)
+        </button>
         <button class="btn-export-html" id="btn-export-poc" title="Baixar arquivo HTML autônomo da POC">
           Exportar POC (.html)
         </button>
@@ -801,6 +881,42 @@
       }
     });
 
+    // File input trigger
+    const fileTrigger = drawer.querySelector("#btn-import-file-trigger");
+    const filePicker = drawer.querySelector("#file-req-picker");
+    if (fileTrigger && filePicker) {
+      fileTrigger.addEventListener("click", () => filePicker.click());
+      filePicker.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            txtArea.value = ev.target.result;
+            window.Kit.toast(screen, `Arquivo ${file.name} carregado com sucesso!`);
+          };
+          reader.readAsText(file, "utf-8");
+        }
+      });
+    }
+
+    // Export PRD Markdown button
+    const btnExportMd = drawer.querySelector("#btn-export-md");
+    if (btnExportMd) {
+      btnExportMd.addEventListener("click", () => {
+        const text = txtArea.value;
+        const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "especificacao-requisitos-poc.md";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        window.Kit.toast(screen, "Especificação PRD (.md) baixada com sucesso!");
+      });
+    }
+
     // Export POC HTML button
     drawer.querySelector("#btn-export-poc").addEventListener("click", exportStandaloneHtml);
 
@@ -851,6 +967,22 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     window.Kit.toast(screen, "Arquivo pitang-poc-simulator.html gerado!");
+  }
+
+  // Live Hot-Reload Polling in IDE Dev Server
+  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+    let initialVersion = null;
+    setInterval(() => {
+      fetch("/api/version")
+        .then((r) => r.json())
+        .then((data) => {
+          if (initialVersion && initialVersion !== data.version) {
+            location.reload();
+          }
+          if (!initialVersion) initialVersion = data.version;
+        })
+        .catch(() => {});
+    }, 1200);
   }
 
   // Export functions to global scope

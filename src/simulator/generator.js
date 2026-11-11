@@ -1,8 +1,8 @@
 /* ==========================================================================
-   PITANG LABS · POC GENERATOR ENGINE
-   Translates business rules & requirement flows into 3 interactive design
-   directions per flow, strictly adhering to Jakub Krehel's Design Engineering
-   rules (concentric radii, scale-on-press 0.96, tabular-nums, WCAG AA).
+   PITANG LABS · POC GENERATOR ENGINE (ENHANCED V2)
+   Generates rich, fully interactive screens across 8 UI Archetypes
+   (Form, Table, Kanban, Dashboard, Timeline, Auth, Copilot, Approval)
+   strictly adhering to Jakub Krehel's Design Engineering standards.
    ========================================================================== */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) {
@@ -13,10 +13,6 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  /**
-   * Generates screens for all flows in project definition
-   * @param {Object} project Object returned by RequirementsParser or DefaultPoc
-   */
   function registerProjectScreens(project) {
     if (!window.Proto || !project || !project.flows) return;
 
@@ -26,42 +22,36 @@
     });
   }
 
-  /**
-   * Builds 3 distinct directions for a given flow
-   */
   function buildVersionsForFlow(flow, flowIndex, project) {
-    const K = window.Kit;
-    const { esc, icon, card, btn, badge, metric, input, select, table, timeline, kanban, many, goCards } = K;
     const rules = flow.rules || [];
+    const archetype = flow.archetype || "form";
 
-    // Direction 1: Direta & Eficiente (Compact / Fast-Track)
     const v1 = {
       name: "Operação Direta",
-      axis: "Foco em velocidade e menor atrito: ações principais em um clique, formulário sintético e confirmação visual instantânea.",
-      personas: ["cidadao", "solicitante"],
+      axis: `Execução rápida e de menor atrito para ${flow.title}: ações principais em um clique, validação em tempo real e foco na tarefa.`,
+      personas: ["solicitante", "cidadao"],
       rules: rules,
       fixes: [
         "Elimina telas intermediárias redundantes do fluxo legado",
         "Apresenta resumo em tempo real do estado da transação",
-        "Reduz tempo de preenchimento em 60% com preenchimento assistido"
+        "Reduz tempo de execução em 60% com preenchimento assistido"
       ],
       tryThis: [
-        "Preencha o campo principal e veja a validação ativa",
-        "Clique no botão de ação primária para disparar o feedback tátil (scale 0.96)",
+        "Interaja com os campos e acione o botão principal com escala tátil (scale 0.96)",
+        "Veja a validação em tempo real e o feedback em toast acessível",
         "Abra o modal de detalhes tocando no card com raio concêntrico"
       ],
       motion: "Escala tátil active:scale-[0.96] com 150ms ease-out. Stagger sequencial de 40ms entre os elementos da lista.",
       tradeoff: "Exibe menos dados contextuais simultaneamente em prol da velocidade de execução.",
       render(root, ctx) {
-        return renderDirection1(root, ctx, flow, flowIndex, project);
+        return renderArchetypeScreen(root, ctx, flow, 1, project);
       }
     };
 
-    // Direction 2: Assistida & Inteligente (AI Copilot / Wizard)
     const v2 = {
       name: "Assistida por IA",
-      axis: "Experiência guiada em etapas com suporte de IA da Pitang: análise de contexto, validação em tempo real e prevenção ativa de erros.",
-      personas: ["analista", "cidadao"],
+      axis: `Experiência guiada em etapas para ${flow.title} com suporte de IA da Pitang: análise de contexto, validação em tempo real e prevenção ativa de erros.`,
+      personas: ["analista", "solicitante"],
       rules: rules,
       fixes: [
         "Previne erros de preenchimento com checagem antecipada de regras de negócio",
@@ -71,20 +61,19 @@
       tryThis: [
         "Navegue entre os passos do assistente guiado",
         "Experimente a sugestão inteligente da IA da Pitang",
-        "Envie o formulário e veja o toast com número de protocolo gerado"
+        "Envie a solicitação e veja o toast com número de protocolo gerado"
       ],
       motion: "Crossfade suave de 200ms entre as etapas do wizard. Badge pulsante sutil na sugestão da IA.",
       tradeoff: "Exige mais etapas de confirmação para garantir maior precisão e conformidade.",
       render(root, ctx) {
-        return renderDirection2(root, ctx, flow, flowIndex, project);
+        return renderArchetypeScreen(root, ctx, flow, 2, project);
       }
     };
 
-    // Direction 3: Analítica & Operacional (Data-Dense / Multi-Perspective)
     const v3 = {
       name: "Visão Analítica",
-      axis: "Painel de alta densidade de informação para operadores e gestores: kanban, métricas tabulares, atalhos rápidos e filtros avançados.",
-      personas: ["ouvidor", "analista", "gestor"],
+      axis: `Painel de alta densidade de informação para operadores e gestores: kanban, métricas tabulares, atalhos rápidos e filtros avançados.`,
+      personas: ["gestor", "ouvidor", "analista"],
       rules: rules,
       fixes: [
         "Substitui controles manuais e planilhas por fila operacional em tempo real",
@@ -99,463 +88,177 @@
       motion: "Micro-transições de 120ms em botões de filtragem. Ausência de animações pesadas para preservar desempenho operacional.",
       tradeoff: "Curva de aprendizado levemente superior para usuários não familiarizados com visão kanban.",
       render(root, ctx) {
-        return renderDirection3(root, ctx, flow, flowIndex, project);
+        return renderArchetypeScreen(root, ctx, flow, 3, project);
       }
     };
 
     return [v1, v2, v3];
   }
 
-  /* ------------------------------------------------------------------
-     DIRECTION 1: DIRETA & EFICIENTE
-     ------------------------------------------------------------------ */
-  function renderDirection1(root, ctx, flow, flowIndex, project) {
+  function renderArchetypeScreen(root, ctx, flow, dirNumber, project) {
     const K = window.Kit;
-    const { esc, bar, tabs, card, btn, badge, metric, input } = K;
-    const flowId = flow.id;
+    const { esc, bar, tabs } = K;
+    const archetype = flow.archetype || "form";
 
-    // Detect specialized screens based on flow category/keywords
-    if (/acesso|login|autenticacao/i.test(flowId)) {
-      root.innerHTML = `
-        ${bar({ title: "Acesso Institucional" })}
-        <div class="sk-scroll">
-          <div class="sk-pad sk-stack" style="padding-top:20px">
-            <div class="sk-brand-badge" aria-label="Pitang Labs Gov">
-              <span class="sk-pill-tag">Pitang Labs · SSO</span>
-              <h2 class="sk-h2">Acesso Seguro</h2>
-              <p class="sk-sub">Identifique-se para acessar o sistema ou registre sua manifestação anônima.</p>
-            </div>
-
-            <div class="sk-card" style="margin-top:8px">
-              <div class="sk-rule-badge"><span>RN-01</span> Login Gov.br & SSO</div>
-              <button class="sk-btn sk-btn-gov" id="btn-gov" aria-label="Entrar com conta gov.br">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                Entrar com gov.br
-              </button>
-              <div class="sk-divider-text"><span>ou credencial corporativa</span></div>
-              <div class="sk-field">
-                <label class="sk-label" for="inp-user">E-mail ou CPF</label>
-                <input class="sk-input" id="inp-user" type="text" placeholder="ex: usuario@pitang.com ou CPF" autocomplete="off" />
-              </div>
-              <div class="sk-field">
-                <label class="sk-label" for="inp-pass">Senha de acesso</label>
-                <input class="sk-input" id="inp-pass" type="password" placeholder="••••••••••••" autocomplete="off" />
-              </div>
-              <button class="sk-btn sk-btn-primary" id="btn-login" style="margin-top:8px">Acessar Sistema</button>
-            </div>
-
-            <div class="sk-card sk-card-anon">
-              <div class="sk-row" style="justify-content:space-between">
-                <div>
-                  <div class="sk-rule-badge"><span>RN-02</span> Sigilo Total</div>
-                  <strong style="display:block;font-size:14px;color:var(--sk-ink)">Manifestação Anônima</strong>
-                  <span style="font-size:12px;color:var(--sk-ink-3)">Não requer identificação nem login.</span>
-                </div>
-                <button class="sk-btn sk-btn-outline" id="btn-anon" style="width:auto;padding:0 16px">Registrar sem Login</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        ${tabs("acesso-seguro")}
-      `;
-
-      const un1 = K.on(root, "#btn-login, #btn-gov", "click", () => {
-        K.toast(root, "Autenticação efetuada com sucesso!");
-        setTimeout(() => ctx.go("nova-manifestacao", 0), 600);
-      });
-      const un2 = K.on(root, "#btn-anon", "click", () => {
-        K.toast(root, "Sessão anônima iniciada (Criptografia ativada)");
-        setTimeout(() => ctx.go("nova-manifestacao", 0), 600);
-      });
-      return () => { un1(); un2(); };
+    if (archetype === "auth") {
+      return renderAuthArchetype(root, ctx, flow, dirNumber);
+    } else if (archetype === "kanban") {
+      return renderKanbanArchetype(root, ctx, flow, dirNumber);
+    } else if (archetype === "table") {
+      return renderTableArchetype(root, ctx, flow, dirNumber);
+    } else if (archetype === "dashboard") {
+      return renderDashboardArchetype(root, ctx, flow, dirNumber);
+    } else if (archetype === "timeline") {
+      return renderTimelineArchetype(root, ctx, flow, dirNumber);
+    } else if (archetype === "copilot") {
+      return renderCopilotArchetype(root, ctx, flow, dirNumber);
+    } else if (archetype === "approval") {
+      return renderApprovalArchetype(root, ctx, flow, dirNumber);
+    } else {
+      return renderFormArchetype(root, ctx, flow, dirNumber);
     }
+  }
 
-    if (/nova-manifestacao|solicitacao|registro|entrada/i.test(flowId)) {
-      root.innerHTML = `
-        ${bar({ title: "Nova Manifestação", back: true })}
-        <div class="sk-scroll">
-          <div class="sk-pad sk-stack" style="padding-top:16px">
-            <div class="sk-row" style="justify-content:space-between;align-items:center">
-              <div>
-                <span class="sk-pill-tag">Protocolo Rápido</span>
-                <h2 class="sk-h2">Registro Direto</h2>
-              </div>
-              <span class="sk-metric-pill" title="SLA Estimado">SLA: <strong class="sk-tabnum">48h</strong></span>
-            </div>
+  /* ------------------------------------------------------------------
+     ARCHETYPE: AUTH / ACCESS
+     ------------------------------------------------------------------ */
+  function renderAuthArchetype(root, ctx, flow, dir) {
+    const K = window.Kit;
+    const { esc, bar, tabs } = K;
 
-            <div class="sk-card">
-              <div class="sk-rule-badge"><span>RN-04</span> Classificação de Demanda</div>
-              <div class="sk-field">
-                <label class="sk-label" for="sel-tipo">Tipo de Manifestação</label>
-                <select class="sk-select" id="sel-tipo">
-                  <option value="denuncia">Denúncia (Sigilo Obrigatório)</option>
-                  <option value="reclamacao">Reclamação de Serviço</option>
-                  <option value="elogio">Elogio ou Reconhecimento</option>
-                  <option value="sugestao">Sugestão de Melhoria</option>
-                </select>
-              </div>
-
-              <div class="sk-field">
-                <label class="sk-label" for="inp-assunto">Assunto da Demanda</label>
-                <input class="sk-input" id="inp-assunto" type="text" value="Irregularidade em processo de compra" />
-              </div>
-
-              <div class="sk-field">
-                <label class="sk-label" for="txt-desc">Descrição dos Fatos</label>
-                <textarea class="sk-textarea" id="txt-desc" rows="4">Relato detalhado para apuração imediata da ouvidoria institucional...</textarea>
-              </div>
-
-              <div class="sk-field">
-                <div class="sk-rule-badge"><span>RN-05</span> Upload até 15&nbsp;MB</div>
-                <label class="sk-label">Anexo de Evidências (PDF, Imagens, Áudio)</label>
-                <div class="sk-dropzone" id="btn-upload" role="button" tabindex="0">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                  <span>Clique ou arraste arquivos para anexar</span>
-                  <small>Formatos aceitos: PDF, PNG, JPG, MP3 (Máx. 15&nbsp;MB)</small>
-                </div>
-                <div class="sk-file-chip" id="file-preview" style="display:none">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
-                  <span>evidencia_comprovante_01.pdf (2.4&nbsp;MB)</span>
-                  <button class="sk-chip-del" aria-label="Remover arquivo">&times;</button>
-                </div>
-              </div>
-
-              <div class="sk-checkbox-wrap">
-                <input type="checkbox" id="chk-lgpd" checked />
-                <label for="chk-lgpd">Declaro estar ciente dos termos da LGPD e autorizo o tratamento de dados estritamente para apuração.</label>
-              </div>
-
-              <button class="sk-btn sk-btn-primary" id="btn-submit-manifestacao" style="margin-top:12px">
-                Submeter Manifestação
-              </button>
-            </div>
-          </div>
-        </div>
-        ${tabs("nova-manifestacao")}
-      `;
-
-      const un1 = K.on(root, "#btn-upload", "click", () => {
-        const preview = root.querySelector("#file-preview");
-        if (preview) {
-          preview.style.display = "flex";
-          K.toast(root, "Arquivo anexado com sucesso (2.4 MB)");
-        }
-      });
-      const un2 = K.on(root, "#btn-submit-manifestacao", "click", () => {
-        K.toast(root, "Manifestação protocolada! Protocolo: PIT-2026-894120");
-        setTimeout(() => ctx.go("acompanhamento-protocolo", 0), 800);
-      });
-      const unBack = K.on(root, "[data-back]", "click", () => ctx.go("acesso-seguro", 0));
-      return () => { un1(); un2(); unBack(); };
-    }
-
-    if (/triagem|mesa-triagem|operacao/i.test(flowId)) {
-      root.innerHTML = `
-        ${bar({ title: "Mesa de Triagem", icons: ["search", "chart"] })}
-        <div class="sk-scroll">
-          <div class="sk-pad sk-stack" style="padding-top:16px">
-            <div class="sk-kpi-grid">
-              <div class="sk-kpi-card">
-                <span class="sk-kpi-lbl">Na Fila</span>
-                <span class="sk-kpi-val sk-tabnum">18</span>
-              </div>
-              <div class="sk-kpi-card sk-kpi-alert">
-                <span class="sk-kpi-lbl">SLA Crítico &lt; 4h</span>
-                <span class="sk-kpi-val sk-tabnum">3</span>
-              </div>
-              <div class="sk-kpi-card">
-                <span class="sk-kpi-lbl">Concluídas Hoje</span>
-                <span class="sk-kpi-val sk-tabnum">27</span>
-              </div>
-            </div>
-
-            <div class="sk-row" style="justify-content:space-between;align-items:center;margin-top:4px">
-              <div class="sk-rule-badge"><span>RN-07</span> Priorização por Urgência</div>
-              <div class="sk-chips" data-group>
-                <button class="sk-chip" data-opt aria-pressed="true">Todos (18)</button>
-                <button class="sk-chip" data-opt aria-pressed="false">Críticos (3)</button>
-                <button class="sk-chip" data-opt aria-pressed="false">Diretoria A (8)</button>
-              </div>
-            </div>
-
-            <div class="sk-stack" style="margin-top:8px">
-              ${[
-                { proto: "PIT-2026-894120", tipo: "Denúncia", sla: "01h 45m", urg: "high", desc: "Irregularidade em processo de compra emergencial de TI" },
-                { proto: "PIT-2026-894088", tipo: "Reclamação", sla: "03h 12m", urg: "high", desc: "Atraso de pagamento de fornecedor homologado" },
-                { proto: "PIT-2026-893954", tipo: "Sugestão", sla: "18h 30m", urg: "normal", desc: "Ajuste na interface do portal de autosserviço" },
-                { proto: "PIT-2026-893812", tipo: "Elogio", sla: "42h 10m", urg: "low", desc: "Atendimento exemplar da equipe de ouvidoria" }
-              ].map((item) => `
-                <div class="sk-card sk-card-ticket sk-press" role="button" tabindex="0" data-ticket="${item.proto}">
-                  <div class="sk-row" style="justify-content:space-between">
-                    <span class="sk-proto-badge sk-tabnum">${item.proto}</span>
-                    <span class="sk-sla-badge ${item.urg === 'high' ? 'sk-sla-alert' : ''}">SLA: <strong class="sk-tabnum">${item.sla}</strong></span>
-                  </div>
-                  <strong class="sk-ticket-title">${item.tipo}: ${item.desc}</strong>
-                  <div class="sk-row" style="justify-content:space-between;margin-top:8px;font-size:12px;color:var(--sk-ink-3)">
-                    <span>Anexos: <strong>2 PDFs</strong></span>
-                    <span class="sk-ticket-act">Despachar &rarr;</span>
-                  </div>
-                </div>
-              `).join("")}
-            </div>
-          </div>
-        </div>
-        ${tabs("mesa-triagem")}
-      `;
-
-      const unTickets = K.on(root, "[data-ticket]", "click", (e, el) => {
-        const id = el.dataset.ticket;
-        K.sheet(root, `
-          <div class="sk-sheet-header">
-            <span class="sk-pill-tag">Triagem Rápida</span>
-            <h3 class="sk-h3">Despacho · ${id}</h3>
-          </div>
-          <p style="font-size:13px;color:var(--sk-ink-2);margin:6px 0">Selecione o encaminhamento institucional para esta demanda:</p>
-          <div class="sk-stack" style="gap:8px">
-            <button class="sk-btn sk-btn-primary" data-action="aceitar">Admitir &amp; Encaminhar para Diretoria</button>
-            <button class="sk-btn sk-btn-outline" data-action="complementar">Solicitar Informações ao Usuário</button>
-            <button class="sk-btn sk-btn-ghost" data-action="arquivar" style="color:#ED1C24">Arquivar por Inconsistência</button>
-          </div>
-        `);
-      });
-
-      const unSheetAct = K.on(root, "[data-action]", "click", (e, b) => {
-        const act = b.dataset.action;
-        K.toast(root, `Ação executada com sucesso: ${act}`);
-        const sh = root.querySelector(".sk-sheet");
-        if (sh) sh.removeAttribute("data-open");
-        const sc = root.querySelector(".sk-scrim");
-        if (sc) sc.removeAttribute("data-open");
-      });
-
-      return () => { unTickets(); unSheetAct(); };
-    }
-
-    if (/acompanhamento|protocolo/i.test(flowId)) {
-      root.innerHTML = `
-        ${bar({ title: "Consulta de Protocolo", icons: ["search", "user"] })}
-        <div class="sk-scroll">
-          <div class="sk-pad sk-stack" style="padding-top:16px">
-            <div class="sk-card">
-              <span class="sk-pill-tag">Rastreabilidade em Tempo Real</span>
-              <div class="sk-field" style="margin-top:8px">
-                <label class="sk-label" for="inp-proto">Número de Protocolo</label>
-                <div class="sk-input-btn-wrap">
-                  <input class="sk-input sk-tabnum" id="inp-proto" value="PIT-2026-894120" />
-                  <button class="sk-btn sk-btn-primary" id="btn-cons" style="width:auto;padding:0 16px">Consultar</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="sk-card" style="margin-top:8px">
-              <div class="sk-row" style="justify-content:space-between;align-items:flex-start">
-                <div>
-                  <span class="sk-rule-badge"><span>RN-10</span> Protocolo Válido</span>
-                  <h3 class="sk-h3" style="margin-top:4px">PIT-2026-894120</h3>
-                  <span style="font-size:12px;color:var(--sk-ink-3)">Aberto em <strong class="sk-tabnum">11/11/2026 às 08:42</strong></span>
-                </div>
-                <span class="sk-status-pill sk-status-analise">Em Triagem</span>
-              </div>
-
-              <div class="sk-timeline" style="margin-top:16px">
-                <div class="sk-tl-item" data-done="true">
-                  <span class="sk-tl-dot"></span>
-                  <div class="sk-tl-content">
-                    <strong class="sk-tl-title">Manifestação Registrada</strong>
-                    <span class="sk-tl-date sk-tabnum">11/11/2026 · 08:42</span>
-                    <p class="sk-tl-desc">Recebida com 2 anexos e chave de sigilo gerada.</p>
-                  </div>
-                </div>
-                <div class="sk-tl-item" data-active="true">
-                  <span class="sk-tl-dot"></span>
-                  <div class="sk-tl-content">
-                    <strong class="sk-tl-title">Análise Preliminar pela Ouvidoria</strong>
-                    <span class="sk-tl-date sk-tabnum">11/11/2026 · 09:15</span>
-                    <p class="sk-tl-desc">Distribuído ao Analista Técnico · SLA restante: <strong class="sk-tabnum">01h 45m</strong></p>
-                  </div>
-                </div>
-                <div class="sk-tl-item">
-                  <span class="sk-tl-dot"></span>
-                  <div class="sk-tl-content">
-                    <strong class="sk-tl-title">Parecer e Conclusão</strong>
-                    <span class="sk-tl-date">Previsão: 12/11/2026</span>
-                    <p class="sk-tl-desc">Notificação será emitida por e-mail e SMS.</p>
-                  </div>
-                </div>
-              </div>
-
-              <button class="sk-btn sk-btn-outline" id="btn-certidao" style="margin-top:16px">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                Baixar Certidão de Trâmite (PDF)
-              </button>
-            </div>
-          </div>
-        </div>
-        ${tabs("acompanhamento-protocolo")}
-      `;
-
-      const unCons = K.on(root, "#btn-cons", "click", () => K.toast(root, "Dados atualizados do protocolo PIT-2026-894120"));
-      const unCert = K.on(root, "#btn-certidao", "click", () => K.toast(root, "Certidão digital emitida com assinatura Pitang Labs"));
-      return () => { unCons(); unCert(); };
-    }
-
-    if (/dashboard|governanca|gestao|metricas/i.test(flowId)) {
-      root.innerHTML = `
-        ${bar({ title: "Painel de Governança", icons: ["chart", "user"] })}
-        <div class="sk-scroll">
-          <div class="sk-pad sk-stack" style="padding-top:16px">
-            <div class="sk-row" style="justify-content:space-between;align-items:center">
-              <div>
-                <span class="sk-pill-tag">Pitang Labs Intelligence</span>
-                <h2 class="sk-h2">Telemetria de SLA</h2>
-              </div>
-              <span class="sk-period-badge">Novembro / 2026</span>
-            </div>
-
-            <div class="sk-kpi-grid" style="grid-template-columns:repeat(2,1fr)">
-              <div class="sk-kpi-card">
-                <span class="sk-kpi-lbl">Resolutividade</span>
-                <span class="sk-kpi-val sk-tabnum">96.4%</span>
-                <span class="sk-kpi-trend sk-trend-up">+2.1% este mês</span>
-              </div>
-              <div class="sk-kpi-card">
-                <span class="sk-kpi-lbl">Tempo Médio SLA</span>
-                <span class="sk-kpi-val sk-tabnum">18.2h</span>
-                <span class="sk-kpi-trend sk-trend-up">-4.5h de melhora</span>
-              </div>
-              <div class="sk-kpi-card">
-                <span class="sk-kpi-lbl">Total Demandas</span>
-                <span class="sk-kpi-val sk-tabnum">1.482</span>
-                <span class="sk-kpi-trend">100% auditadas</span>
-              </div>
-              <div class="sk-kpi-card">
-                <span class="sk-kpi-lbl">Índice Conformidade</span>
-                <span class="sk-kpi-val sk-tabnum">99.8%</span>
-                <span class="sk-kpi-trend sk-trend-up">LGPD em dia</span>
-              </div>
-            </div>
-
-            <div class="sk-card" style="margin-top:8px">
-              <div class="sk-rule-badge"><span>RN-14</span> Distribuição por Área</div>
-              <strong style="display:block;margin:6px 0 12px;font-size:14px">Volumetria por Diretoria</strong>
-              <div class="sk-stack" style="gap:10px">
-                ${[
-                  { nome: "Operações & Infra", pct: 42, count: 622, color: "#ED1C24" },
-                  { nome: "Tecnologia & Sistemas", pct: 28, count: 415, color: "#2F5D9E" },
-                  { nome: "Recursos Humanos & Gestão", pct: 18, count: 266, color: "#1F6F5C" },
-                  { nome: "Jurídico & Compliance", pct: 12, count: 179, color: "#9A5A12" }
-                ].map((b) => `
-                  <div>
-                    <div class="sk-row" style="justify-content:space-between;font-size:12.5px;margin-bottom:4px">
-                      <span>${b.nome}</span>
-                      <strong class="sk-tabnum">${b.count} (${b.pct}%)</strong>
-                    </div>
-                    <div class="sk-bar-bg"><div class="sk-bar-fill" style="width:${b.pct}%;background:${b.color}"></div></div>
-                  </div>
-                `).join("")}
-              </div>
-
-              <div class="sk-row" style="margin-top:16px;gap:8px">
-                <button class="sk-btn sk-btn-primary" id="btn-export-rep">Exportar Relatório PDF</button>
-                <button class="sk-btn sk-btn-outline" id="btn-export-csv">CSV Auditável</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        ${tabs("dashboard-governanca")}
-      `;
-
-      const unRep = K.on(root, "#btn-export-rep", "click", () => K.toast(root, "Relatório executivo gerado com sucesso!"));
-      const unCsv = K.on(root, "#btn-export-csv", "click", () => K.toast(root, "Base anonimizada CSV baixada para auditoria."));
-      return () => { unRep(); unCsv(); };
-    }
-
-    // Generic fallback for any other custom user requirement flow
     root.innerHTML = `
-      ${bar({ title: flow.title, back: true })}
+      ${bar({ title: flow.title })}
       <div class="sk-scroll">
-        <div class="sk-pad sk-stack" style="padding-top:16px">
+        <div class="sk-pad sk-stack" style="padding-top:20px">
           <div class="sk-brand-badge">
-            <span class="sk-pill-tag">${esc(flow.category || "Fluxo de Negócio")}</span>
-            <h2 class="sk-h2">${esc(flow.title)}</h2>
-            <p class="sk-sub">${esc(flow.sum || "Fluxo mapeado de acordo com requisitos.")}</p>
+            <span class="sk-pill-tag">${esc(flow.category)}</span>
+            <h2 class="sk-h2">Acesso Institucional</h2>
+            <p class="sk-sub">${esc(flow.sum)}</p>
           </div>
 
           <div class="sk-card">
-            <strong style="font-size:14px;color:var(--sk-ink)">Regras de Negócio Validadas</strong>
-            <ul class="sk-rule-list" style="margin-top:8px">
-              ${(flow.rules || []).map((r) => `<li><span class="sk-rule-chip">RN</span> ${esc(r)}</li>`).join("")}
-            </ul>
-
-            <div class="sk-field" style="margin-top:14px">
-              <label class="sk-label" for="inp-gen">Entrada Principal</label>
-              <input class="sk-input" id="inp-gen" placeholder="Insira o identificador ou dado..." value="DADO-REF-2026" />
+            <div class="sk-rule-badge"><span>RN-01</span> Gov.br &amp; SSO Corporativo</div>
+            <button class="sk-btn sk-btn-gov" id="btn-gov">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              Entrar com gov.br (Prata/Ouro)
+            </button>
+            <div class="sk-divider-text"><span>ou credencial institucional</span></div>
+            <div class="sk-field">
+              <label class="sk-label" for="inp-email">E-mail corporativo ou CPF</label>
+              <input class="sk-input" id="inp-email" type="text" placeholder="ex: usuario@pitang.com ou CPF" value="colaborador@pitang.com" autocomplete="off" />
             </div>
+            <div class="sk-field">
+              <label class="sk-label" for="inp-pass">Senha de acesso</label>
+              <input class="sk-input" id="inp-pass" type="password" value="••••••••••••" autocomplete="off" />
+            </div>
+            <button class="sk-btn sk-btn-primary" id="btn-login" style="margin-top:6px">Acessar Sistema</button>
+          </div>
 
-            <button class="sk-btn sk-btn-primary" id="btn-gen-exec" style="margin-top:12px">Executar Ação Principal</button>
+          <div class="sk-card">
+            <div class="sk-row" style="justify-content:space-between">
+              <div>
+                <div class="sk-rule-badge"><span>RN-02</span> Sigilo &amp; Criptografia</div>
+                <strong style="display:block;font-size:14px;color:var(--sk-ink);margin-top:2px">Acesso Anônimo Seguro</strong>
+                <span style="font-size:12px;color:var(--sk-ink-3)">Gera chave de consulta única sem rastreamento de IP.</span>
+              </div>
+              <button class="sk-btn sk-btn-outline" id="btn-anon" style="width:auto;padding:0 16px">Entrada Anônima</button>
+            </div>
           </div>
         </div>
       </div>
       ${tabs(flow.id)}
     `;
 
-    const unGen = K.on(root, "#btn-gen-exec", "click", () => K.toast(root, `Ação executada para: ${flow.title}`));
-    return () => unGen();
+    const un1 = K.on(root, "#btn-login, #btn-gov", "click", () => {
+      K.toast(root, "Autenticação efetuada com sucesso!");
+    });
+    const un2 = K.on(root, "#btn-anon", "click", () => {
+      K.toast(root, "Sessão anônima iniciada (Token: PIT-ANON-9812)");
+    });
+    return () => { un1(); un2(); };
   }
 
   /* ------------------------------------------------------------------
-     DIRECTION 2: ASSISTIDA & INTELIGENTE (AI COPILOT / WIZARD)
+     ARCHETYPE: FORM / ENTRY & UPLOAD
      ------------------------------------------------------------------ */
-  function renderDirection2(root, ctx, flow, flowIndex, project) {
+  function renderFormArchetype(root, ctx, flow, dir) {
     const K = window.Kit;
-    const { esc, bar, tabs, card, btn, badge, metric } = K;
+    const { esc, bar, tabs } = K;
+
+    const isWizard = dir === 2;
 
     root.innerHTML = `
-      ${bar({ title: `${flow.title} · IA Copilot`, back: true, icons: ["search", "user"] })}
+      ${bar({ title: flow.title, back: true })}
       <div class="sk-scroll">
         <div class="sk-pad sk-stack" style="padding-top:16px">
-          <div class="sk-ai-header">
-            <div class="sk-row" style="gap:8px;align-items:center">
-              <span class="sk-ai-sparkle">✦</span>
-              <span class="sk-ai-badge">Pitang Copilot Inteligente</span>
+          <div class="sk-row" style="justify-content:space-between;align-items:center">
+            <div>
+              <span class="sk-pill-tag">${esc(flow.category)}</span>
+              <h2 class="sk-h2">${esc(flow.title)}</h2>
             </div>
-            <h2 class="sk-h2" style="margin-top:6px">Assistente Preditivo</h2>
-            <p class="sk-sub">A IA pré-classifica entidades e sugere preenchimento conforme regras de negócio.</p>
+            <span class="sk-metric-pill">SLA Estimado: <strong class="sk-tabnum">24h</strong></span>
           </div>
 
-          <div class="sk-stepper">
-            <div class="sk-step sk-step-done"><span class="sk-tabnum">1</span> Contexto</div>
-            <div class="sk-step sk-step-active"><span class="sk-tabnum">2</span> Análise</div>
-            <div class="sk-step"><span class="sk-tabnum">3</span> Conclusão</div>
-          </div>
-
-          <div class="sk-card sk-card-ai-glow">
-            <div class="sk-ai-box">
-              <div class="sk-row" style="justify-content:space-between">
-                <strong>Sugestão Gerada por IA</strong>
-                <span class="sk-pill-confidence sk-tabnum">98.2% precisão</span>
+          ${isWizard ? `
+            <div class="sk-stepper">
+              <div class="sk-step sk-step-done"><span class="sk-tabnum">1</span> Dados</div>
+              <div class="sk-step sk-step-active"><span class="sk-tabnum">2</span> Evidências</div>
+              <div class="sk-step"><span class="sk-tabnum">3</span> Revisão</div>
+            </div>
+            <div class="sk-ai-box" style="margin-top:2px">
+              <div class="sk-row" style="gap:6px;align-items:center">
+                <span class="sk-ai-sparkle">✦</span>
+                <strong style="font-size:13px">Assistente Pitang de Preenchimento</strong>
               </div>
-              <p style="font-size:13px;line-height:1.45;color:var(--sk-ink-2);margin:8px 0">
-                Identificamos correlação com <strong>3 casos semelhantes</strong> resolvidos na mesma diretoria. Deseja aplicar a minuta sugerida?
+              <p style="font-size:12.5px;color:var(--sk-ink-2);margin:4px 0 0">
+                Campos pré-preenchidos a partir do histórico anterior. Verifique os dados abaixo.
               </p>
-              <div class="sk-row" style="gap:8px">
-                <button class="sk-btn sk-btn-primary" id="btn-ai-apply" style="height:38px;font-size:13px">Aplicar Recomendação</button>
-                <button class="sk-btn sk-btn-outline" id="btn-ai-edit" style="height:38px;font-size:13px">Personalizar</button>
-              </div>
+            </div>
+          ` : ""}
+
+          <div class="sk-card">
+            <div class="sk-rule-badge"><span>RN-01</span> Validação Obrigatória</div>
+            <div class="sk-field">
+              <label class="sk-label" for="inp-titulo">Título / Assunto da Solicitação</label>
+              <input class="sk-input" id="inp-titulo" type="text" value="Solicitação de Análise e Parecer Técnico" />
             </div>
 
-            <div class="sk-field" style="margin-top:14px">
-              <label class="sk-label" for="inp-ai-prompt">Prompt / Complemento da Demanda</label>
-              <textarea class="sk-textarea" id="inp-ai-prompt" rows="3">Ajustar resposta considerando prazo emergencial de 4 horas com notificação automática.</textarea>
+            <div class="sk-field">
+              <label class="sk-label" for="sel-cat">Categoria da Demanda</label>
+              <select class="sk-select" id="sel-cat">
+                <option value="1">Operacional / Processos</option>
+                <option value="2">Infraestrutura &amp; Tecnologia</option>
+                <option value="3">Conformidade Legal &amp; Auditoria</option>
+              </select>
+            </div>
+
+            <div class="sk-field">
+              <label class="sk-label" for="txt-detalhes">Descrição Detalhada dos Fatos</label>
+              <textarea class="sk-textarea" id="txt-detalhes" rows="3">Relato circunstanciado com apontamento de requisitos e datas de ocorrência...</textarea>
+            </div>
+
+            <div class="sk-field">
+              <div class="sk-rule-badge"><span>RN-02</span> Upload Validado até 15&nbsp;MB</div>
+              <label class="sk-label">Anexo de Documentos e Comprovantes</label>
+              <div class="sk-dropzone" id="btn-drop">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                <span>Clique para anexar arquivo (PDF, PNG, JPG)</span>
+                <small>Limite por arquivo: 15&nbsp;MB com hash de integridade</small>
+              </div>
+              <div class="sk-file-chip" id="file-chip" style="display:none">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                <span>documento_comprovatorio_v1.pdf (1.8&nbsp;MB)</span>
+                <button class="sk-chip-del" id="btn-del-file">&times;</button>
+              </div>
             </div>
 
             <div class="sk-checkbox-wrap">
-              <input type="checkbox" id="chk-ai-confirm" checked />
-              <label for="chk-ai-confirm">Validado por analista humano em conformidade com as diretrizes do Pitang Labs.</label>
+              <input type="checkbox" id="chk-termos" checked />
+              <label for="chk-termos">Declaro estar ciente dos termos de uso e autorizo o tratamento de dados conforme a LGPD.</label>
             </div>
 
-            <button class="sk-btn sk-btn-primary" id="btn-step-next" style="margin-top:12px">
-              Avançar para Homologação &rarr;
+            <button class="sk-btn sk-btn-primary" id="btn-enviar-form" style="margin-top:10px">
+              ${isWizard ? "Avançar para Revisão &rarr;" : "Submeter Solicitação"}
             </button>
           </div>
         </div>
@@ -563,88 +266,98 @@
       ${tabs(flow.id)}
     `;
 
-    const un1 = K.on(root, "#btn-ai-apply", "click", () => K.toast(root, "Recomendação da IA incorporada com sucesso!"));
-    const un2 = K.on(root, "#btn-step-next", "click", () => {
-      K.toast(root, "Etapa validada! Transição para homologação registrada.");
+    const unDrop = K.on(root, "#btn-drop", "click", () => {
+      const chip = root.querySelector("#file-chip");
+      if (chip) {
+        chip.style.display = "flex";
+        K.toast(root, "Arquivo anexado com sucesso (1.8 MB)");
+      }
     });
-    return () => { un1(); un2(); };
+    const unDel = K.on(root, "#btn-del-file", "click", (e) => {
+      e.stopPropagation();
+      const chip = root.querySelector("#file-chip");
+      if (chip) chip.style.display = "none";
+    });
+    const unSubmit = K.on(root, "#btn-enviar-form", "click", () => {
+      K.toast(root, "Solicitação processada! Protocolo: PIT-2026-94812");
+    });
+    return () => { unDrop(); unDel(); unSubmit(); };
   }
 
   /* ------------------------------------------------------------------
-     DIRECTION 3: ANALÍTICA & OPERACIONAL (DATA-DENSE / KANBAN / TABLE)
+     ARCHETYPE: KANBAN & QUEUE
      ------------------------------------------------------------------ */
-  function renderDirection3(root, ctx, flow, flowIndex, project) {
+  function renderKanbanArchetype(root, ctx, flow, dir) {
     const K = window.Kit;
-    const { esc, bar, tabs, card, btn, badge, metric } = K;
+    const { esc, bar, tabs } = K;
 
     root.innerHTML = `
-      ${bar({ title: `${flow.title} · Painel Analítico`, icons: ["search", "menu"] })}
+      ${bar({ title: flow.title, icons: ["search", "filter"] })}
       <div class="sk-scroll">
         <div class="sk-pad sk-stack" style="padding-top:16px">
           <div class="sk-row" style="justify-content:space-between;align-items:center">
             <div>
-              <span class="sk-pill-tag">Alta Densidade de Informação</span>
-              <h2 class="sk-h2">Visão Operacional</h2>
+              <span class="sk-pill-tag">${esc(flow.category)}</span>
+              <h2 class="sk-h2">Esteira Operacional</h2>
             </div>
-            <div class="sk-row" style="gap:6px">
-              <button class="sk-filter-pill sk-filter-active" id="btn-view-kanban">Kanban</button>
-              <button class="sk-filter-pill" id="btn-view-table">Tabela</button>
+            <div class="sk-row" style="gap:4px">
+              <span class="sk-kpi-val sk-tabnum" style="font-size:14px;color:var(--brand-pitang);font-weight:700">3 Críticos</span>
             </div>
           </div>
 
-          <div class="sk-kanban-board" id="kanban-container">
+          <div class="sk-kanban-board">
             <div class="sk-kanban-col">
               <div class="sk-kanban-col-h">
                 <span>Triagem Inicial</span>
-                <span class="sk-kanban-count sk-tabnum">4</span>
+                <span class="sk-kanban-count sk-tabnum">5</span>
               </div>
               <div class="sk-kanban-cards">
-                <div class="sk-kanban-card sk-press" role="button" tabindex="0" data-kcard="1">
+                <div class="sk-kanban-card sk-press" data-card-id="PIT-101">
                   <div class="sk-row" style="justify-content:space-between">
-                    <span class="sk-badge-sm sk-tabnum">PIT-8941</span>
+                    <span class="sk-badge-sm sk-tabnum">PIT-101</span>
                     <span class="sk-sla-tag sk-sla-tag-alert sk-tabnum">&lt; 2h</span>
                   </div>
-                  <strong class="sk-kcard-t">Denúncia Contratual</strong>
-                  <span class="sk-kcard-sub">Diretoria de Compras</span>
+                  <strong class="sk-kcard-t">Denúncia Emergencial</strong>
+                  <span class="sk-kcard-sub">Diretoria de Operações</span>
                 </div>
-                <div class="sk-kanban-card sk-press" role="button" tabindex="0" data-kcard="2">
+                <div class="sk-kanban-card sk-press" data-card-id="PIT-102">
                   <div class="sk-row" style="justify-content:space-between">
-                    <span class="sk-badge-sm sk-tabnum">PIT-8935</span>
-                    <span class="sk-sla-tag sk-tabnum">14h</span>
+                    <span class="sk-badge-sm sk-tabnum">PIT-102</span>
+                    <span class="sk-sla-tag sk-tabnum">12h</span>
                   </div>
-                  <strong class="sk-kcard-t">Solicitação de Acesso</strong>
-                  <span class="sk-kcard-sub">Segurança da Informação</span>
+                  <strong class="sk-kcard-t">Reclamação de SLA</strong>
+                  <span class="sk-kcard-sub">TI Corporativo</span>
                 </div>
               </div>
             </div>
 
             <div class="sk-kanban-col">
               <div class="sk-kanban-col-h">
-                <span>Em Análise Técnica</span>
-                <span class="sk-kanban-count sk-tabnum">7</span>
+                <span>Em Análise</span>
+                <span class="sk-kanban-count sk-tabnum">8</span>
               </div>
               <div class="sk-kanban-cards">
-                <div class="sk-kanban-card sk-press" role="button" tabindex="0" data-kcard="3">
+                <div class="sk-kanban-card sk-press" data-card-id="PIT-098">
                   <div class="sk-row" style="justify-content:space-between">
-                    <span class="sk-badge-sm sk-tabnum">PIT-8920</span>
+                    <span class="sk-badge-sm sk-tabnum">PIT-098</span>
                     <span class="sk-sla-tag sk-tabnum">28h</span>
                   </div>
-                  <strong class="sk-kcard-t">Reclamação de Portal</strong>
-                  <span class="sk-kcard-sub">Engenharia de Software</span>
+                  <strong class="sk-kcard-t">Auditoria de Dados</strong>
+                  <span class="sk-kcard-sub">Compliance LGPD</span>
                 </div>
               </div>
             </div>
 
             <div class="sk-kanban-col">
               <div class="sk-kanban-col-h">
-                <span>Concluídos</span>
-                <span class="sk-kanban-count sk-tabnum">23</span>
+                <span>Finalizados</span>
+                <span class="sk-kanban-count sk-tabnum">34</span>
               </div>
               <div class="sk-kanban-cards">
-                <div class="sk-kanban-card sk-card-done sk-press" role="button" tabindex="0" data-kcard="4">
+                <div class="sk-kanban-card sk-card-done sk-press" data-card-id="PIT-087">
                   <div class="sk-row" style="justify-content:space-between">
-                    <span class="sk-badge-sm sk-tabnum">PIT-8902</span>
-                    <span class="sk-badge-check">✓ Finalizado</span>
+                    <span class="sk-badge-sm sk-tabnum">PIT-087</span>
+                    <span class="sk-badge-check">✓ Despachado</span>
                   </div>
                   <strong class="sk-kcard-t">Elogio ao Atendimento</strong>
                   <span class="sk-kcard-sub">Ouvidoria Geral</span>
@@ -653,14 +366,14 @@
             </div>
           </div>
 
-          <div class="sk-card" style="margin-top:12px">
+          <div class="sk-card">
             <div class="sk-row" style="justify-content:space-between;align-items:center">
-              <strong style="font-size:13.5px">Ações em Massa Selecionadas</strong>
-              <span class="sk-tabnum" style="font-size:12px;color:var(--sk-ink-3)">3 itens marcados</span>
+              <strong style="font-size:13px">Ações em Lote Selecionadas</strong>
+              <span class="sk-tabnum" style="font-size:12px;color:var(--sk-ink-3)">3 itens</span>
             </div>
-            <div class="sk-row" style="gap:8px;margin-top:8px">
-              <button class="sk-btn sk-btn-primary" id="btn-batch-despachar" style="height:40px;font-size:13px">Despachar em Lote</button>
-              <button class="sk-btn sk-btn-outline" id="btn-batch-prorrogar" style="height:40px;font-size:13px">Prorrogar SLA</button>
+            <div class="sk-row" style="gap:8px;margin-top:6px">
+              <button class="sk-btn sk-btn-primary" id="btn-batch-ok" style="height:40px;font-size:13px">Despachar em Lote</button>
+              <button class="sk-btn sk-btn-outline" id="btn-batch-escalar" style="height:40px;font-size:13px">Escalar SLA</button>
             </div>
           </div>
         </div>
@@ -668,13 +381,336 @@
       ${tabs(flow.id)}
     `;
 
-    const unKCard = K.on(root, "[data-kcard]", "click", (e, el) => {
-      K.toast(root, `Abrindo dossiê completo do item ${el.dataset.kcard}`);
+    const unCard = K.on(root, "[data-card-id]", "click", (e, el) => {
+      K.sheet(root, `
+        <h3 class="sk-h3">Dossiê Operacional · ${el.dataset.cardId}</h3>
+        <p style="font-size:13px;color:var(--sk-ink-2);margin:8px 0">Selecione o encaminhamento com base nas regras de negócio:</p>
+        <div class="sk-stack" style="gap:8px">
+          <button class="sk-btn sk-btn-primary" data-act="admitir">Admitir &amp; Encaminhar</button>
+          <button class="sk-btn sk-btn-outline" data-act="diligencia">Abrir Diligência</button>
+          <button class="sk-btn sk-btn-ghost" data-act="concluir" style="color:var(--brand-pitang)">Arquivar Demanda</button>
+        </div>
+      `);
     });
-    const unBatch = K.on(root, "#btn-batch-despachar", "click", () => {
-      K.toast(root, "3 demandas despachadas simultaneamente com assinatura em lote.");
+
+    const unBatch = K.on(root, "#btn-batch-ok", "click", () => {
+      K.toast(root, "Lote despachado com sucesso para a diretoria.");
     });
-    return () => { unKCard(); unBatch(); };
+    return () => { unCard(); unBatch(); };
+  }
+
+  /* ------------------------------------------------------------------
+     ARCHETYPE: TABLE & SEARCH
+     ------------------------------------------------------------------ */
+  function renderTableArchetype(root, ctx, flow, dir) {
+    const K = window.Kit;
+    const { esc, bar, tabs } = K;
+
+    root.innerHTML = `
+      ${bar({ title: flow.title, icons: ["search", "download"] })}
+      <div class="sk-scroll">
+        <div class="sk-pad sk-stack" style="padding-top:16px">
+          <div class="sk-row" style="justify-content:space-between;align-items:center">
+            <div>
+              <span class="sk-pill-tag">${esc(flow.category)}</span>
+              <h2 class="sk-h2">Diretório de Registros</h2>
+            </div>
+            <button class="sk-btn sk-btn-outline" id="btn-exp-csv" style="width:auto;height:32px;padding:0 12px;font-size:12px">
+              Exportar CSV
+            </button>
+          </div>
+
+          <div class="sk-field" style="margin-top:2px">
+            <input class="sk-input" type="search" placeholder="Filtrar por protocolo, assunto ou setor..." value="" />
+          </div>
+
+          <div class="sk-card" style="padding:4px;overflow-x:auto">
+            <table class="sk-data-table">
+              <thead>
+                <tr>
+                  <th>Protocolo</th>
+                  <th>Assunto</th>
+                  <th>SLA Restante</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${[
+                  { id: "PIT-8941", t: "Denúncia de Compras", sla: "01h 45m", st: "Crítico", cls: "sk-sla-alert" },
+                  { id: "PIT-8938", t: "Atraso de Pagamento", sla: "03h 12m", st: "Urgente", cls: "sk-sla-alert" },
+                  { id: "PIT-8924", t: "Acesso a Sistema", sla: "18h 30m", st: "Em Análise", cls: "" },
+                  { id: "PIT-8910", t: "Elogio Ouvidoria", sla: "42h 10m", st: "Concluído", cls: "" }
+                ].map((row) => `
+                  <tr class="sk-press" data-row-id="${row.id}">
+                    <td class="sk-tabnum"><strong>${row.id}</strong></td>
+                    <td>${row.t}</td>
+                    <td class="sk-tabnum ${row.cls}">${row.sla}</td>
+                    <td><span class="sk-status-pill">${row.st}</span></td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      ${tabs(flow.id)}
+    `;
+
+    const unRow = K.on(root, "[data-row-id]", "click", (e, tr) => {
+      K.toast(root, `Abrindo registro ${tr.dataset.rowId}`);
+    });
+    const unCsv = K.on(root, "#btn-exp-csv", "click", () => {
+      K.toast(root, "Exportação CSV gerada em conformidade LGPD.");
+    });
+    return () => { unRow(); unCsv(); };
+  }
+
+  /* ------------------------------------------------------------------
+     ARCHETYPE: DASHBOARD & TELEMETRY
+     ------------------------------------------------------------------ */
+  function renderDashboardArchetype(root, ctx, flow, dir) {
+    const K = window.Kit;
+    const { esc, bar, tabs } = K;
+
+    root.innerHTML = `
+      ${bar({ title: flow.title, icons: ["chart", "user"] })}
+      <div class="sk-scroll">
+        <div class="sk-pad sk-stack" style="padding-top:16px">
+          <div class="sk-row" style="justify-content:space-between;align-items:center">
+            <div>
+              <span class="sk-pill-tag">Pitang Intelligence</span>
+              <h2 class="sk-h2">Telemetria &amp; KPIs</h2>
+            </div>
+            <span class="sk-period-badge">Novembro / 2026</span>
+          </div>
+
+          <div class="sk-kpi-grid" style="grid-template-columns:repeat(2,1fr)">
+            <div class="sk-kpi-card">
+              <span class="sk-kpi-lbl">Taxa de Resolução</span>
+              <span class="sk-kpi-val sk-tabnum">96.8%</span>
+              <span class="sk-kpi-trend sk-trend-up">+1.8% vs mês ant.</span>
+            </div>
+            <div class="sk-kpi-card">
+              <span class="sk-kpi-lbl">Tempo Médio SLA</span>
+              <span class="sk-kpi-val sk-tabnum">16.4h</span>
+              <span class="sk-kpi-trend sk-trend-up">-3.2h de redução</span>
+            </div>
+            <div class="sk-kpi-card">
+              <span class="sk-kpi-lbl">Demandas Totais</span>
+              <span class="sk-kpi-val sk-tabnum">2.840</span>
+              <span class="sk-kpi-trend">100% auditadas</span>
+            </div>
+            <div class="sk-kpi-card">
+              <span class="sk-kpi-lbl">Conformidade LGPD</span>
+              <span class="sk-kpi-val sk-tabnum">99.9%</span>
+              <span class="sk-kpi-trend sk-trend-up">Em conformidade</span>
+            </div>
+          </div>
+
+          <div class="sk-card">
+            <div class="sk-rule-badge"><span>RN-03</span> Distribuição por Diretoria</div>
+            <strong style="display:block;margin:6px 0 10px;font-size:13.5px">Volume por Área Responsável</strong>
+            <div class="sk-stack" style="gap:10px">
+              ${[
+                { n: "Operações & Infra", pct: 45, c: 1278, col: "#ED1C24" },
+                { n: "Tecnologia & Sistemas", pct: 30, c: 852, col: "#2F5D9E" },
+                { n: "Recursos Humanos & Gestão", pct: 15, c: 426, col: "#1F6F5C" },
+                { n: "Jurídico & Compliance", pct: 10, c: 284, col: "#9A5A12" }
+              ].map((item) => `
+                <div>
+                  <div class="sk-row" style="justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span>${item.n}</span>
+                    <strong class="sk-tabnum">${item.c} (${item.pct}%)</strong>
+                  </div>
+                  <div class="sk-bar-bg"><div class="sk-bar-fill" style="width:${item.pct}%;background:${item.col}"></div></div>
+                </div>
+              `).join("")}
+            </div>
+
+            <button class="sk-btn sk-btn-primary" id="btn-export-rep" style="margin-top:14px">
+              Exportar Relatório Consolidado (PDF)
+            </button>
+          </div>
+        </div>
+      </div>
+      ${tabs(flow.id)}
+    `;
+
+    const unRep = K.on(root, "#btn-export-rep", "click", () => {
+      K.toast(root, "Relatório executivo gerado com assinatura digital.");
+    });
+    return () => unRep();
+  }
+
+  /* ------------------------------------------------------------------
+     ARCHETYPE: TIMELINE & PROTOCOL
+     ------------------------------------------------------------------ */
+  function renderTimelineArchetype(root, ctx, flow, dir) {
+    const K = window.Kit;
+    const { esc, bar, tabs } = K;
+
+    root.innerHTML = `
+      ${bar({ title: flow.title, icons: ["search", "user"] })}
+      <div class="sk-scroll">
+        <div class="sk-pad sk-stack" style="padding-top:16px">
+          <div class="sk-card">
+            <span class="sk-pill-tag">Rastreamento em Tempo Real</span>
+            <div class="sk-field" style="margin-top:6px">
+              <label class="sk-label" for="inp-proto-val">Protocolo de Consulta</label>
+              <div class="sk-input-btn-wrap">
+                <input class="sk-input sk-tabnum" id="inp-proto-val" value="PIT-2026-894120" />
+                <button class="sk-btn sk-btn-primary" id="btn-buscar-proto" style="width:auto;padding:0 18px">Buscar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sk-card">
+            <div class="sk-row" style="justify-content:space-between;align-items:flex-start">
+              <div>
+                <span class="sk-rule-badge"><span>RN-01</span> Protocolo Válido</span>
+                <h3 class="sk-h3" style="margin-top:4px">PIT-2026-894120</h3>
+                <span style="font-size:12px;color:var(--sk-ink-3)">Registrado em <strong class="sk-tabnum">11/11/2026 às 08:42</strong></span>
+              </div>
+              <span class="sk-status-pill sk-status-analise">Em Triagem</span>
+            </div>
+
+            <div class="sk-timeline" style="margin-top:16px">
+              <div class="sk-tl-item" data-done="true">
+                <span class="sk-tl-dot"></span>
+                <div class="sk-tl-content">
+                  <strong class="sk-tl-title">Solicitação Recebida</strong>
+                  <span class="sk-tl-date sk-tabnum">11/11/2026 · 08:42</span>
+                  <p class="sk-tl-desc">Cadastrada com 2 anexos e chave de sigilo gerada.</p>
+                </div>
+              </div>
+              <div class="sk-tl-item" data-active="true">
+                <span class="sk-tl-dot"></span>
+                <div class="sk-tl-content">
+                  <strong class="sk-tl-title">Triagem Preliminar</strong>
+                  <span class="sk-tl-date sk-tabnum">11/11/2026 · 09:15</span>
+                  <p class="sk-tl-desc">Distribuída para a Diretoria Técnica · SLA restante: <strong class="sk-tabnum">01h 45m</strong></p>
+                </div>
+              </div>
+              <div class="sk-tl-item">
+                <span class="sk-tl-dot"></span>
+                <div class="sk-tl-content">
+                  <strong class="sk-tl-title">Parecer e Conclusão</strong>
+                  <span class="sk-tl-date">Previsão: 12/11/2026</span>
+                  <p class="sk-tl-desc">Notificação será emitida ao solicitante por e-mail e SMS.</p>
+                </div>
+              </div>
+            </div>
+
+            <button class="sk-btn sk-btn-outline" id="btn-certidao" style="margin-top:14px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Baixar Certidão Digital de Trâmite (PDF)
+            </button>
+          </div>
+        </div>
+      </div>
+      ${tabs(flow.id)}
+    `;
+
+    const unB = K.on(root, "#btn-buscar-proto", () => K.toast(root, "Dados do protocolo atualizados em tempo real."));
+    const unC = K.on(root, "#btn-certidao", () => K.toast(root, "Certidão digital autenticada com carimbo do tempo."));
+    return () => { unB(); unC(); };
+  }
+
+  /* ------------------------------------------------------------------
+     ARCHETYPE: COPILOT / AI CHAT
+     ------------------------------------------------------------------ */
+  function renderCopilotArchetype(root, ctx, flow, dir) {
+    const K = window.Kit;
+    const { esc, bar, tabs } = K;
+
+    root.innerHTML = `
+      ${bar({ title: flow.title, icons: ["sparkles", "user"] })}
+      <div class="sk-scroll">
+        <div class="sk-pad sk-stack" style="padding-top:16px">
+          <div class="sk-ai-header">
+            <div class="sk-row" style="gap:6px;align-items:center">
+              <span class="sk-ai-sparkle">✦</span>
+              <span class="sk-ai-badge">Pitang Copilot RAG</span>
+            </div>
+            <h2 class="sk-h2" style="margin-top:4px">Assistente Operacional</h2>
+            <p class="sk-sub">Análise preditiva de precedentes e elaboração de respostas automáticas.</p>
+          </div>
+
+          <div class="sk-card sk-card-ai-glow">
+            <div class="sk-ai-box">
+              <div class="sk-row" style="justify-content:space-between">
+                <strong>Minuta Recomendada</strong>
+                <span class="sk-pill-confidence sk-tabnum">99.1% similaridade</span>
+              </div>
+              <p style="font-size:13px;color:var(--sk-ink-2);margin:8px 0;line-height:1.4">
+                "Com base na documentação anexada, a manifestação atende integralmente aos requisitos da Instrução Normativa nº 14/2026. Sugere-se admissibilidade com despacho à Diretoria de Operações."
+              </p>
+              <div class="sk-row" style="gap:8px">
+                <button class="sk-btn sk-btn-primary" id="btn-aceitar-ia" style="height:36px;font-size:12.5px">Aceitar Minuta</button>
+                <button class="sk-btn sk-btn-outline" id="btn-editar-ia" style="height:36px;font-size:12.5px">Editar</button>
+              </div>
+            </div>
+
+            <div class="sk-field" style="margin-top:10px">
+              <label class="sk-label" for="inp-prompt">Solicitar Ajuste ao Copilot</label>
+              <input class="sk-input" id="inp-prompt" placeholder="Ex: Tornar o parecer mais sucinto e incluir prazo de 48h..." />
+            </div>
+
+            <button class="sk-btn sk-btn-outline" id="btn-gerar-var">Gerar Variação Alternativa</button>
+          </div>
+        </div>
+      </div>
+      ${tabs(flow.id)}
+    `;
+
+    const unA = K.on(root, "#btn-aceitar-ia", () => K.toast(root, "Minuta adotada como despacho oficial!"));
+    const unV = K.on(root, "#btn-gerar-var", () => K.toast(root, "Nova versão gerada em 180ms."));
+    return () => { unA(); unV(); };
+  }
+
+  /* ------------------------------------------------------------------
+     ARCHETYPE: APPROVAL & GOVERNANCE
+     ------------------------------------------------------------------ */
+  function renderApprovalArchetype(root, ctx, flow, dir) {
+    const K = window.Kit;
+    const { esc, bar, tabs } = K;
+
+    root.innerHTML = `
+      ${bar({ title: flow.title, icons: ["shield", "check"] })}
+      <div class="sk-scroll">
+        <div class="sk-pad sk-stack" style="padding-top:16px">
+          <div class="sk-card">
+            <div class="sk-row" style="justify-content:space-between">
+              <span class="sk-pill-tag">Alçada de Aprovação</span>
+              <span class="sk-tabnum" style="font-size:13px;font-weight:700;color:var(--brand-pitang)">R$&nbsp;48.500,00</span>
+            </div>
+            <h3 class="sk-h3" style="margin-top:4px">Aquisição de Servidores e Licenças de Nuvem</h3>
+            <span style="font-size:12px;color:var(--sk-ink-3)">Requisitante: Diretoria de TI · Centro de Custo: CC-2041</span>
+
+            <div class="sk-stack" style="margin-top:10px;gap:8px">
+              <div class="sk-row" style="justify-content:space-between;font-size:12.5px;padding:6px 8px;background:var(--sk-surface-2);border-radius:6px">
+                <span>Saldo Orçamentário:</span>
+                <strong class="sk-tabnum">R$&nbsp;120.000,00</strong>
+              </div>
+              <div class="sk-row" style="justify-content:space-between;font-size:12.5px;padding:6px 8px;background:var(--sk-surface-2);border-radius:6px">
+                <span>Conformidade de Alçada:</span>
+                <strong style="color:var(--sk-success)">✓ Gerência Sênior</strong>
+              </div>
+            </div>
+
+            <div class="sk-row" style="gap:8px;margin-top:14px">
+              <button class="sk-btn sk-btn-primary" id="btn-app-ok" style="flex:1">Aprovar Pedido</button>
+              <button class="sk-btn sk-btn-outline" id="btn-app-rej" style="flex:1;color:var(--brand-pitang)">Rejeitar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      ${tabs(flow.id)}
+    `;
+
+    const unO = K.on(root, "#btn-app-ok", () => K.toast(root, "Pedido aprovado e assinado digitalmente!"));
+    const unR = K.on(root, "#btn-app-rej", () => K.toast(root, "Pedido devolvido para adequação do requisitante."));
+    return () => { unO(); unR(); };
   }
 
   return {

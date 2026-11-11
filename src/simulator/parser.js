@@ -1,8 +1,8 @@
 /* ==========================================================================
-   PITANG LABS · REQUIREMENTS PARSER ENGINE
+   PITANG LABS · REQUIREMENTS PARSER ENGINE (ENHANCED V2)
    Converts requirement text in ANY format (Markdown, PRD, User Stories, Gherkin,
-   Free Text, Bullet Points, or JSON) into structured Categories, Flows,
-   Business Rules, and Personas.
+   Free Text, Bullet Points, or JSON) into structured Categories, Archetypes,
+   Flows, Business Rules, Fields, Actions, and Personas.
    ========================================================================== */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) {
@@ -18,29 +18,41 @@
     {
       id: "acesso",
       title: "01. Acesso & Autenticação",
-      keywords: ["login", "autenticacao", "acesso", "sso", "gov.br", "senha", "perfil", "2fa", "onboarding", "cadastro usuario", "token"]
+      keywords: ["login", "autenticacao", "acesso", "sso", "gov.br", "senha", "perfil", "2fa", "onboarding", "cadastro usuario", "token", "biometria", "permissao", "seguranca"]
     },
     {
       id: "entrada",
       title: "02. Entrada & Registro",
-      keywords: ["solicitacao", "abertura", "nova manifestacao", "formulario", "upload", "anexo", "pedido", "requisicao", "denuncia", "chamado", "cadastro", "input", "envio"]
+      keywords: ["solicitacao", "abertura", "nova manifestacao", "formulario", "upload", "anexo", "pedido", "requisicao", "denuncia", "chamado", "cadastro", "input", "envio", "checkout", "carrinho", "afericao"]
     },
     {
       id: "operacao",
       title: "03. Triagem & Operação",
-      keywords: ["triagem", "kanban", "atendimento", "analise", "fila", "aprovacao", "alçada", "parecer", "encaminhamento", "sla", "prioridade", "operacional", "despacho"]
+      keywords: ["triagem", "kanban", "atendimento", "analise", "fila", "aprovacao", "alçada", "parecer", "encaminhamento", "sla", "prioridade", "operacional", "despacho", "esteira", "processamento", "mesa"]
     },
     {
       id: "acompanhamento",
       title: "04. Acompanhamento & Protocolo",
-      keywords: ["protocolo", "consulta", "status", "timeline", "historico", "rastreamento", "notificacao", "interacao", "resposta", "chat", "acompanhar"]
+      keywords: ["protocolo", "consulta", "status", "timeline", "historico", "rastreamento", "notificacao", "interacao", "resposta", "chat", "acompanhar", "certidao", "detalhes"]
     },
     {
       id: "gestao",
       title: "05. Gestão, Métricas & Governança",
-      keywords: ["dashboard", "metricas", "kpi", "relatorio", "indicador", "auditoria", "conformidade", "lgpd", "governanca", "executivo", "exportacao", "painel"]
+      keywords: ["dashboard", "metricas", "kpi", "relatorio", "indicador", "auditoria", "conformidade", "lgpd", "governanca", "executivo", "exportacao", "painel", "telemetria", "saving", "assiduidade"]
     }
   ];
+
+  // UI Archetypes based on flow intent
+  const ARCHETYPE_KEYWORDS = {
+    auth: ["login", "autenticacao", "sso", "gov.br", "senha", "2fa", "onboarding", "biometria", "acesso"],
+    form: ["solicitacao", "formulario", "abertura", "upload", "anexo", "cadastro", "novo", "nova", "requisicao", "pedido", "checkout"],
+    kanban: ["kanban", "triagem", "fila", "mesa", "esteira", "pipeline", "operacional", "despacho"],
+    table: ["tabela", "listagem", "lista", "busca", "filtro", "registros", "pesquisa", "diretorio", "catalogo", "cotações"],
+    dashboard: ["dashboard", "metricas", "kpi", "painel", "indicadores", "grafico", "telemetria", "executivo", "saving"],
+    timeline: ["timeline", "protocolo", "linha do tempo", "consulta", "historico", "rastreamento", "tramitacao", "certidao"],
+    copilot: ["copilot", "ia", "inteligencia", "assistente", "chat", "mensagem", "conversacional", "preditivo", "sugestao"],
+    approval: ["aprovacao", "alcada", "parecer", "conformidade", "auditoria", "validacao", "aceite", "rejeicao"]
+  };
 
   // Default Personas aligned with Pitang Labs enterprise standards
   const DEFAULT_PERSONAS = {
@@ -103,7 +115,50 @@
   }
 
   /**
-   * Parse arbitrary requirement text
+   * Detect UI Archetype for flow
+   */
+  function detectArchetype(title, desc, rules) {
+    const combined = `${title} ${desc} ${(rules || []).join(" ")}`
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+    for (const [archetype, keywords] of Object.entries(ARCHETYPE_KEYWORDS)) {
+      if (keywords.some((kw) => combined.includes(kw))) {
+        return archetype;
+      }
+    }
+    return "form";
+  }
+
+  /**
+   * Extract fields, entities and actions from rule text
+   */
+  function extractEntities(text) {
+    const fields = [];
+    const actions = [];
+
+    const fieldMatches = text.match(/(?:campo|input|anexo|upload|arquivo|cpf|email|senha|protocolo|valor|descricao|assunto|tipo|motivo|data|prazo|status|justificativa)\b/gi);
+    if (fieldMatches) {
+      fieldMatches.forEach((f) => {
+        const clean = f.toLowerCase();
+        if (!fields.includes(clean)) fields.push(clean);
+      });
+    }
+
+    const actionMatches = text.match(/(?:submeter|enviar|salvar|aprovar|rejeitar|despachar|encaminhar|consultar|baixar|exportar|filtrar|pesquisar|acessar|autenticar)\b/gi);
+    if (actionMatches) {
+      actionMatches.forEach((a) => {
+        const clean = a.toLowerCase();
+        if (!actions.includes(clean)) actions.push(clean);
+      });
+    }
+
+    return { fields, actions };
+  }
+
+  /**
+   * Parse arbitrary requirement text in ANY format
    * @param {string} rawText Raw user requirements from IDE
    * @returns {Object} Structured POC Project definition
    */
@@ -123,11 +178,10 @@
           return normalizeProjectJson(json);
         }
       } catch (e) {
-        // Not JSON, continue to NLP heuristic parsing
+        // Not JSON, continue to heuristic parsing
       }
     }
 
-    // Heuristic extraction
     let title = "Pitang Labs · POC Simulator";
     let summary = "Protótipo interativo gerado a partir de requisitos de negócio.";
     let currentCategory = "Geral";
@@ -141,13 +195,13 @@
       if (/^#\s+(.+)/i.test(line)) {
         title = line.replace(/^#\s+/i, "").trim();
         break;
-      } else if (/^(projeto|poc|sistema|aplicacao):\s*(.+)/i.test(line)) {
-        title = line.replace(/^(projeto|poc|sistema|aplicacao):\s*/i, "").trim();
+      } else if (/^(projeto|poc|sistema|aplicacao|produto):\s*(.+)/i.test(line)) {
+        title = line.replace(/^(projeto|poc|sistema|aplicacao|produto):\s*/i, "").trim();
         break;
       }
     }
 
-    // Identify sections, user stories, Gherkin, or business rules
+    // Process lines
     let currentFlow = null;
     let ruleIndex = 1;
 
@@ -155,16 +209,16 @@
       const line = lines[i].trim();
       if (!line) continue;
 
-      // Category detection: ## Categoria: X or ### Módulo: X
-      const catMatch = line.match(/^#{2,3}\s+(?:categoria|modulo|fase|etapa):\s*(.+)/i) ||
-                       line.match(/^(?:categoria|modulo|fase|etapa):\s*(.+)/i);
+      // Category detection: ## Categoria: X or ### Módulo: X or ## Fase: X
+      const catMatch = line.match(/^#{2,3}\s+(?:categoria|modulo|fase|etapa|epico):\s*(.+)/i) ||
+                       line.match(/^(?:categoria|modulo|fase|etapa|epico):\s*(.+)/i);
       if (catMatch) {
         currentCategory = catMatch[1].trim();
         continue;
       }
 
-      // Flow detection: ### Fluxo: X or ## Tela: X or Scenario: X or Como... quero...
-      const flowHeadingMatch = line.match(/^#{2,3}\s+(?:fluxo|tela|visao|modulo|epico)?\s*[:\d.-]*\s*(.+)/i);
+      // Flow detection: ### Fluxo: X or ## Tela: X or Scenario: X or Como [ator] quero [acao]
+      const flowHeadingMatch = line.match(/^#{2,4}\s+(?:fluxo|tela|visao|modulo|passo)?\s*[:\d.-]*\s*(.+)/i);
       const gherkinScenarioMatch = line.match(/^(?:cenario|scenario):\s*(.+)/i);
       const userStoryMatch = line.match(/^(?:como|as a)\s+(.+?),\s*(?:quero|i want)\s+(.+)/i);
 
@@ -221,6 +275,9 @@
         allRules.push(formattedRule);
         if (currentFlow) {
           currentFlow.rules.push(formattedRule);
+          const entities = extractEntities(ruleText);
+          currentFlow.fields.push(...entities.fields);
+          currentFlow.actions.push(...entities.actions);
         }
         continue;
       }
@@ -229,7 +286,7 @@
       if (line.startsWith("-") || line.startsWith("*")) {
         const item = line.replace(/^[-*]\s*/, "").trim();
         if (currentFlow) {
-          if (/upload|arquivo|anexo|campo|input|cpf|email|senha|protocolo/i.test(item)) {
+          if (/upload|arquivo|anexo|campo|input|cpf|email|senha|protocolo|valor|data/i.test(item)) {
             currentFlow.fields.push(item);
           } else {
             currentFlow.rules.push(item);
@@ -248,24 +305,25 @@
       flows.push(currentFlow);
     }
 
-    // If no distinct flows were matched by headers, split unstructured text into flows
+    // Fallback if no markdown headers were detected
     if (flows.length === 0) {
       flows = extractFlowsFromFreeText(text);
     }
 
-    // Ensure all flows have categories and business rules
+    // Ensure all flows have categories, archetypes, and business rules
     flows = flows.map((f, idx) => {
       const category = f.category && f.category !== "Geral"
         ? f.category
         : classifyCategory(f.title, f.sum, f.rules);
 
-      // If flow has no explicit rules, synthesize from flow context
+      const archetype = detectArchetype(f.title, f.sum, f.rules);
+
       let rules = f.rules && f.rules.length > 0 ? f.rules : [];
       if (rules.length === 0) {
         rules = [
-          `RN-${String(idx + 1).padStart(2, "0")}.1: Validação de campos obrigatórios com feedback em tempo real`,
-          `RN-${String(idx + 1).padStart(2, "0")}.2: Conformidade com padrão de usabilidade Jakub e LGPD`,
-          `RN-${String(idx + 1).padStart(2, "0")}.3: Persistência de estado e histórico auditável`
+          `RN-${String(idx + 1).padStart(2, "0")}.1: Validação de dados com feedback tátil e prevenção de erros`,
+          `RN-${String(idx + 1).padStart(2, "0")}.2: Padrão de usabilidade Jakub Krehel e conformidade WCAG AA`,
+          `RN-${String(idx + 1).padStart(2, "0")}.3: Persistência de estado com registro em auditoria`
         ];
       }
 
@@ -274,13 +332,15 @@
         id: f.id || `flow-${idx + 1}`,
         title: f.title || `Fluxo ${idx + 1}`,
         category,
+        archetype,
         sum: f.sum || `Fluxo de negócio mapeado: ${f.title}`,
         rules,
-        today: [`Tela legada / Especificação de Requisitos - ${f.title}`]
+        fields: Array.from(new Set(f.fields || [])),
+        actions: Array.from(new Set(f.actions || [])),
+        today: [`Requisito especificado: ${f.title}`]
       };
     });
 
-    // Group categories in presentation order
     const categoriesPresent = Array.from(new Set(flows.map((f) => f.category)));
 
     return {
@@ -298,11 +358,38 @@
    * Helper to parse free-form / paragraph text into logical flows
    */
   function extractFlowsFromFreeText(text) {
+    const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim().length > 20);
+
+    if (paragraphs.length >= 2) {
+      return paragraphs.slice(0, 6).map((para, i) => {
+        const firstLine = para.trim().split("\n")[0].replace(/^[#*-.\s]+/, "");
+        const title = firstLine.length < 50 ? firstLine : `Etapa ${i + 1}: ${firstLine.slice(0, 45)}…`;
+        const category = classifyCategory(title, para, []);
+        const archetype = detectArchetype(title, para, []);
+
+        return {
+          id: slugify(title) || `fluxo-${i + 1}`,
+          title: title,
+          category: category,
+          archetype: archetype,
+          sum: para.trim().replace(/\n/g, " ").slice(0, 160) + (para.length > 160 ? "…" : ""),
+          rules: [
+            `RN-${String(i + 1).padStart(2, "0")}.1: Execução e validação da regra de negócio descrita no requisito`,
+            `RN-${String(i + 1).padStart(2, "0")}.2: Feedback tátil active:scale-[0.96] e isolamento de scroll`
+          ],
+          fields: [],
+          actions: []
+        };
+      });
+    }
+
+    // Default enterprise flows
     const defaultFlowNames = [
       {
         title: "Acesso & Autenticação Segura",
         sum: "Identificação do usuário, login institucional Gov.br / SSO ou acesso anônimo com criptografia.",
         category: "01. Acesso & Autenticação",
+        archetype: "auth",
         rules: [
           "RN-01: Suporte a login Gov.br, SSO corporativo e opção de manifestação anônima",
           "RN-02: Mascaramento de dados sensíveis e token de sessão seguro com timeout de 15 minutos"
@@ -312,6 +399,7 @@
         title: "Registro de Solicitação & Upload",
         sum: "Formulário em etapas com validação preditiva, preenchimento assistido e upload de comprovantes.",
         category: "02. Entrada & Registro",
+        archetype: "form",
         rules: [
           "RN-03: Upload de documentos (PDF, PNG, JPG) com limite de até 15MB e verificação de integridade",
           "RN-04: Geração imediata de protocolo alfanumérico único para acompanhamento"
@@ -321,6 +409,7 @@
         title: "Painel de Triagem & SLA Operacional",
         sum: "Visão kanban do analista com classificação automática por urgência e suporte de IA generativa.",
         category: "03. Triagem & Operação",
+        archetype: "kanban",
         rules: [
           "RN-05: Alerta visual com temporizador tabular para casos com SLA abaixo de 4 horas",
           "RN-06: Sugestão automática de parecer prévio por modelo de IA com validação humana obrigatória"
@@ -330,15 +419,17 @@
         title: "Consulta de Protocolo & Timeline",
         sum: "Acompanhamento transparente pelo cidadão com linha do tempo de despachos e download de parecer.",
         category: "04. Acompanhamento & Protocolo",
+        archetype: "timeline",
         rules: [
-          "RN-07: Consulta pública por número de protocolo com proteção de reCAPTCHA e sigilo",
-          "RN-08: Notificações push e por e-mail a cada transição de status homologada"
+          "RN-07: Consulta pública por número de protocolo com proteção de sigilo",
+          "RN-08: Notificações a cada transição de status homologada"
         ]
       },
       {
         title: "Dashboard Executivo & Governança",
         sum: "Telemetria consolidada de resolutividade, tempo médio de atendimento e conformidade legal.",
         category: "05. Gestão, Métricas & Governança",
+        archetype: "dashboard",
         rules: [
           "RN-09: Apresentação de indicadores de atendimento com números tabulares e filtros por período",
           "RN-10: Exportação de logs de auditoria em conformidade com as diretrizes do Pitang Labs"
@@ -351,6 +442,7 @@
       title: item.title,
       sum: item.sum,
       category: item.category,
+      archetype: item.archetype,
       rules: item.rules,
       fields: [],
       actions: []
@@ -365,8 +457,11 @@
         id: f.id || `flow-${i + 1}`,
         title: f.title || `Fluxo ${i + 1}`,
         category: f.category || "02. Entrada & Registro",
+        archetype: f.archetype || detectArchetype(f.title, f.sum || "", f.rules || []),
         sum: f.sum || f.description || "",
         rules: f.rules || [],
+        fields: f.fields || [],
+        actions: f.actions || [],
         today: f.today || [`Especificação de Requisito: ${f.title || i}`]
       })),
       categories: Array.from(new Set(json.flows.map((f) => f.category || "02. Entrada & Registro"))),
@@ -377,6 +472,7 @@
 
   return {
     parse: parseRequirements,
+    detectArchetype,
     CATEGORY_MAP,
     DEFAULT_PERSONAS
   };

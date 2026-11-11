@@ -838,6 +838,147 @@
   padding-bottom: 24px;
 }
 
+/* ------------------------------------------------------------------
+   TABLES & DATA GRIDS
+   ------------------------------------------------------------------ */
+.sk-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+}
+.sk-data-table th {
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--sk-ink-3);
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--sk-line-2);
+}
+.sk-data-table td {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--sk-line);
+  color: var(--sk-ink);
+}
+.sk-data-table tbody tr {
+  transition: background-color 140ms ease-out;
+  cursor: pointer;
+}
+.sk-data-table tbody tr:hover {
+  background: var(--sk-surface-2);
+}
+.sk-data-table tbody tr:active {
+  transform: scale(0.995);
+}
+
+.sk-divider-text {
+  position: relative;
+  text-align: center;
+  margin: 10px 0;
+}
+.sk-divider-text::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--sk-line);
+}
+.sk-divider-text span {
+  position: relative;
+  background: var(--sk-surface);
+  padding: 0 10px;
+  font-size: 11px;
+  color: var(--sk-ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sk-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--sk-surface-2);
+  color: var(--sk-ink-2);
+  border: 1px solid var(--sk-line);
+}
+.sk-status-analise {
+  background: var(--brand-surface);
+  color: var(--brand-pitang);
+  border-color: rgba(237, 28, 36, 0.25);
+}
+.sk-badge-check {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sk-success);
+}
+.sk-badge-sm {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--sk-surface-2);
+  color: var(--sk-ink);
+}
+.sk-period-badge {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--sk-surface-2);
+  color: var(--sk-ink-2);
+}
+.sk-card-done {
+  opacity: 0.85;
+  background: var(--sk-surface-2);
+}
+
+/* ------------------------------------------------------------------
+   JAKUB KREHEL UX INSPECTOR MODE (LIVE OVERLAY)
+   ------------------------------------------------------------------ */
+.ph[data-jakub-inspector="true"] .sk-btn,
+.ph[data-jakub-inspector="true"] .sk-ic,
+.ph[data-jakub-inspector="true"] .sk-tab,
+.ph[data-jakub-inspector="true"] .sk-chip {
+  outline: 1.5px dashed rgba(31, 111, 92, 0.7) !important;
+  outline-offset: 1px !important;
+}
+.ph[data-jakub-inspector="true"] .sk-card {
+  outline: 1.5px solid rgba(237, 28, 36, 0.4) !important;
+}
+.ph[data-jakub-inspector="true"] .sk-tabnum {
+  text-decoration: underline dotted #1F6F5C;
+}
+.jakub-score-pill {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  z-index: 120;
+  background: #0A0D14;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  animation: sk-in 200ms ease-out;
+}
+.jakub-score-pill span {
+  color: #4ADE80;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Reduced Motion Override */
 @media (prefers-reduced-motion: reduce) {
   .ph *, .ph *::before, .ph *::after {
